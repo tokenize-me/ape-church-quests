@@ -1,0 +1,19 @@
+{
+  "name": "apechain-quests-bot",
+  "version": "1.0.0",
+  "description": "A Node.js bot to monitor quests on Ape Chain.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "ethers": "^6.8.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
