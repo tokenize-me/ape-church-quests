@@ -156,7 +156,7 @@ async function pollDatabaseAndProcessUsers(contract, userInfoContract) {
                 const apeWageredRaw = await userInfoContract.balanceOf(user.user_address);
                 const apeWagered = parseFloat(ethers.formatEther(apeWageredRaw));
                 console.log(`   - apeWagered is: ${apeWagered.toString()}`);
-                if (apeWagered <= MIN_BALANCE) {
+                if (apeWagered < MIN_BALANCE) {
                     console.log(`   - ⏭️ Skipping user: EXP balance is not > ${MIN_BALANCE}.`);
                     continue;
                 }
