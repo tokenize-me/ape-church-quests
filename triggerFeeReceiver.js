@@ -4,10 +4,6 @@ require('dotenv').config();
 
 // --- Configuration ---
 const {
-    // Supabase
-    SUPABASE_URL,
-    SUPABASE_SERVICE_KEY,
-    // Blockchain
     APECHAIN_RPC_URL,
     PRIVATE_KEY,
 } = process.env;
@@ -21,20 +17,11 @@ const POLLING_INTERVAL = 600_000; // 10 minutes
 
 const APE_AMOUNT = ethers.parseUnits("400", "ether");
 
-
-// --- In-Memory Retry Queue ---
-// A Set to store user addresses for whom the on-chain tx succeeded but DB update failed.
-const dbUpdateRetryQueue = new Map();
-
 // --- Validation ---
 if (!APECHAIN_RPC_URL || !PRIVATE_KEY) {
     console.error("❌ Missing required environment variables. Please check your .env file.");
     process.exit(1);
 }
-
-// --- Initialization ---
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-
 /**
  * The main function that initializes clients and starts the bot.
  */
