@@ -147,6 +147,10 @@ async function pollDatabaseAndProcessUsers(contract, userInfoContract) {
 
             // 3. Loop through each eligible user and process them.
             for (const user of usersToProcess) {
+                if (!user.x_handle) {
+                    console.log('x Handle undefined, skipping user...')
+                    continue;
+                }
                 console.log(`\nProcessing user: ${user.x_handle} (${user.user_address})`);
 
                 const currentLevel = user.verification_bonus_level ?? 0;
