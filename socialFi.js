@@ -172,20 +172,42 @@ async function pollDatabaseAndProcessUsers(contract) {
             const scoresMap = new Map();
             
             // Chunk score fetching
-            const SCORE_CHUNK_SIZE = 500;
+            const SCORE_CHUNK_SIZE = 100; // Reduced from 500 to prevent fetch failures
             for (let i = 0; i < uniqueAddresses.length; i += SCORE_CHUNK_SIZE) {
                 const chunk = uniqueAddresses.slice(i, i + SCORE_CHUNK_SIZE);
-                const { data: userScores, error: scoreError } = await supabase
-                    .from('users')
-                    .select('user_address, x_score, x_handle')
-                    .in('user_address', chunk);
                 
-                if (scoreError) {
-                    console.error(`Error fetching scores for chunk ${i}: ${scoreError.message}`);
-                    continue;
+                let userScores = null;
+                let fetchAttempts = 0;
+                const maxAttempts = 3;
+                
+                while(fetchAttempts < maxAttempts) {
+                    fetchAttempts++;
+                    const { data, error } = await supabase
+                        .from('users')
+                        .select('user_address, x_score, x_handle')
+                        .in('user_address', chunk);
+                    
+                    if (error) {
+                        console.error(`Error fetching scores for chunk ${i} (Attempt ${fetchAttempts}/${maxAttempts}): ${error.message}`);
+                        if (fetchAttempts < maxAttempts) {
+                             // console.log(`   - Retrying in 2 seconds...`);
+                             await new Promise(resolve => setTimeout(resolve, 2000));
+                        }
+                    } else {
+                        userScores = data;
+                        break;
+                    }
                 }
+
+                if (!userScores) {
+                     console.error(`❌ Failed to fetch scores for chunk ${i} after ${maxAttempts} attempts. Skipping this chunk.`);
+                     continue;
+                }
+
                 if (userScores) {
-                    userScores.forEach(s => scoresMap.set(s.user_address.toLowerCase(), { score: s.x_score, handle: s.x_handle }));
+                    userScores.forEach(s => {
+                        scoresMap.set(s.user_address.toLowerCase(), { score: s.x_score, handle: s.x_handle });
+                    });
                 }
             }
 
@@ -198,12 +220,12 @@ async function pollDatabaseAndProcessUsers(contract) {
             for (const user of allEligibleUsers) {
                 const userData = scoresMap.get(user.user_address.toLowerCase());
                 if (!userData) {
-                    console.warn(`⚠️ Score not found for ${user.user_address}, skipping.`);
+                    console.warn(`⚠️ Score not found for ${user.x_handle} (${user.user_address}), skipping.`);
                     continue;
                 }
 
                 const { score, handle } = userData;
-                // console.log(`   - Score found for ${user.user_address} (${handle}): ${score}`);
+                console.log(`   - Score found for ${user.user_address} (${handle}): ${score}`);
 
                 const amountGP = getGPFromScoreAndQuest(score, user.quest_id);
                 if (amountGP === BigInt("0")) {
