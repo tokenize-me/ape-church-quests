@@ -135,8 +135,8 @@ async function pollDatabaseAndProcessUsers(contract) {
             const { data: users, error: selectError } = await supabase
                 .from('user_quests')
                 .select('user_address, quest_id')
-                .gt('quest_id', 1)
-                // .in('quest_id', [2, 3, 4]) // Explicitly targets only quests 2, 3, and 4
+                // .gt('quest_id', 1)
+                .in('quest_id', [2, 3, 4, 13]) // Explicitly targets only quests 2, 3, and 4
                 .eq('completed', true)
                 .eq('received_verification_bonus', false)
                 .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
