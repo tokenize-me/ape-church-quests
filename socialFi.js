@@ -56,23 +56,23 @@ const getGPMultiplierFromScore = (score) => {
     if (score <= 100) {
         return 1.0;
     } else if (score <= 200) {
-        return 1.2;
-    } else if (score <= 300) {
         return 1.3;
-    } else if (score <= 400) {
+    } else if (score <= 300) {
         return 1.4;
-    } else if (score <= 500) {
+    } else if (score <= 400) {
         return 1.5;
+    } else if (score <= 500) {
+        return 1.6;
     } else if (score <= 750) {
-        return 2.0;
+        return 2.2;
     } else if (score <= 1000) {
-        return 2.5;
+        return 2.8;
     } else if (score <= 1500) {
-        return 3.0;
+        return 3.5;
     } else if (score <= 2000) {
-        return 5.0;
+        return 5.5;
     } else {
-        return 10.0;
+        return 12.0;
     }
 }
 
@@ -88,7 +88,7 @@ const getGPFromScoreAndQuest = (xScore, questId) => {
         const amountGP = Math.floor(multiplier * 10000);
         return BigInt(amountGP.toString());
     } else if (questId === 13) {
-        const amountGP = Math.floor(multiplier * 50000);
+        const amountGP = Math.floor(multiplier * 20000);
         return BigInt(amountGP.toString());
     } else {
         return BigInt("0");
