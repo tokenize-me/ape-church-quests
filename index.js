@@ -151,11 +151,21 @@ async function pollDatabaseAndProcessUsers(contract, userInfoContract) {
 
                 const currentLevel = user.verification_bonus_level ?? 0;
 
+                
+
                 // Optional: sanity check on EXP balance
                 console.log(`   - Checking EXP balance for ${user.user_address}...`);
                 const apeWageredRaw = await userInfoContract.balanceOf(user.user_address);
                 const apeWagered = parseFloat(ethers.formatEther(apeWageredRaw));
                 console.log(`   - apeWagered is: ${apeWagered.toString()}`);
+
+                if (x_handle === 'ZardsNFT') {
+                    console.log('--------------------------------')
+                    console.log('ZARDS NFT USER!!!')
+                    console.log('apeWagered: ', apeWagered)
+                    console.log('--------------------------------')
+                }
+
                 if (apeWagered < MIN_BALANCE) {
                     console.log(`   - ⏭️ Skipping user: EXP balance is not > ${MIN_BALANCE}.`);
                     continue;
@@ -169,6 +179,15 @@ async function pollDatabaseAndProcessUsers(contract, userInfoContract) {
                     } else {
                         break; // milestones are ordered by minWagered
                     }
+                }
+
+                if (x_handle === 'ZardsNFT') {
+                    console.log('--------------------------------')
+                    console.log('ZARDS NFT USER!!!')
+                    console.log('apeWagered: ', apeWagered)
+                    console.log('newLevel: ', newLevel)
+                    console.log('currentLevel: ', currentLevel)
+                    console.log('--------------------------------')
                 }
 
                 if (newLevel <= currentLevel) {
@@ -186,7 +205,7 @@ async function pollDatabaseAndProcessUsers(contract, userInfoContract) {
                 // Double-check they actually qualify for this targetLevel based on spend
                 if (newLevel < targetLevel) {
                     console.log(
-                        `   - User does not yet qualify for next level (targetLevel=${targetLevel}, newLevel=${newLevel}).`
+                        `   - User ${user.x_handle} does not yet qualify for next level (targetLevel=${targetLevel}, newLevel=${newLevel}).`
                     );
                     continue;
                 }
