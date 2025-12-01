@@ -54,11 +54,11 @@ async function main() {
 
 const getGPMultiplierFromScore = (score) => {
     if (score <= 100) {
-        return 1.0;
+        return 0.0;
     } else if (score <= 200) {
-        return 1.3;
+        return 0.0;
     } else if (score <= 300) {
-        return 1.4;
+        return 0.0;
     } else if (score <= 400) {
         return 1.5;
     } else if (score <= 500) {
