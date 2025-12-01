@@ -147,10 +147,6 @@ async function pollDatabaseAndProcessUsers(contract, userInfoContract) {
 
             // 3. Loop through each eligible user and process them.
             for (const user of usersToProcess) {
-                if (!user.x_handle) {
-                    console.log('x Handle undefined, skipping user...')
-                    continue;
-                }
                 console.log(`\nProcessing user: ${user.x_handle} (${user.user_address})`);
 
                 const currentLevel = user.verification_bonus_level ?? 0;
@@ -162,13 +158,6 @@ async function pollDatabaseAndProcessUsers(contract, userInfoContract) {
                 const apeWageredRaw = await userInfoContract.balanceOf(user.user_address);
                 const apeWagered = parseFloat(ethers.formatEther(apeWageredRaw));
                 console.log(`   - apeWagered is: ${apeWagered.toString()}`);
-
-                if (x_handle === 'ZardsNFT') {
-                    console.log('--------------------------------')
-                    console.log('ZARDS NFT USER!!!')
-                    console.log('apeWagered: ', apeWagered)
-                    console.log('--------------------------------')
-                }
 
                 if (apeWagered < MIN_BALANCE) {
                     console.log(`   - ⏭️ Skipping user: EXP balance is not > ${MIN_BALANCE}.`);
@@ -183,15 +172,6 @@ async function pollDatabaseAndProcessUsers(contract, userInfoContract) {
                     } else {
                         break; // milestones are ordered by minWagered
                     }
-                }
-
-                if (x_handle === 'ZardsNFT') {
-                    console.log('--------------------------------')
-                    console.log('ZARDS NFT USER!!!')
-                    console.log('apeWagered: ', apeWagered)
-                    console.log('newLevel: ', newLevel)
-                    console.log('currentLevel: ', currentLevel)
-                    console.log('--------------------------------')
                 }
 
                 if (newLevel <= currentLevel) {
