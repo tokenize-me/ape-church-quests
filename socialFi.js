@@ -18,7 +18,7 @@ const EXP_MANAGER_CONTRACT_ADDRESS = "0x8046Ac65d2A077562989B2f0770D9bB40e3078CD
 const CONTRACT_ABI = [{"inputs":[{"internalType":"address","name":"userInfoTracker_","type":"address"},{"internalType":"address","name":"expBoostManager_","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[],"name":"EXP_PER_LEVEL","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"EXP_SCALE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"WAGERED_PER_EXP","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"users","type":"address[]"}],"name":"batchGetLevels","outputs":[{"internalType":"uint256[]","name":"levels","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"users","type":"address[]"},{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"name":"batchGrantBonusEXP","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"canGrantBonusEXP","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"canSetEXPScale","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"canSpendEXP","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"expBoostManager","outputs":[{"internalType":"contract IEXPBoostManager","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getCurrentEXP","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getLevel","outputs":[{"internalType":"uint256","name":"level","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getLevelAndEXP","outputs":[{"internalType":"uint256","name":"level","type":"uint256"},{"internalType":"uint256","name":"exp","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getTotalEXP","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"grantBonusEXP","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"oldEXPManager","type":"address"}],"name":"initWagered","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"manager","outputs":[{"internalType":"contract IGovernanceManager","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"},{"internalType":"bool","name":"canGrant","type":"bool"}],"name":"setCanGrantBonusEXP","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"},{"internalType":"bool","name":"canSet","type":"bool"}],"name":"setCanSetEXPScale","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"destContract","type":"address"},{"internalType":"bool","name":"canSpend","type":"bool"}],"name":"setCanSpendEXP","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_expBoostManager","type":"address"}],"name":"setEXPBoostManager","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_EXP_SCALE","type":"uint256"}],"name":"setEXP_SCALE","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_userInfoTracker","type":"address"}],"name":"setUserInfoTracker","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"target","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"spendEXP","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"userInfo","outputs":[{"internalType":"uint256","name":"totalEXP","type":"uint256"},{"internalType":"uint256","name":"currentEXP","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"userInfoTracker","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"wagered","outputs":[],"stateMutability":"nonpayable","type":"function"}];
 
 // --- Constants ---
-const POLLING_INTERVAL = 10000; // 10 seconds
+const POLLING_INTERVAL = 30000; // 30 seconds
 
 // --- In-Memory Retry Queue ---
 // A Set to store user addresses for whom the on-chain tx succeeded but DB update failed.
@@ -96,7 +96,7 @@ const getGPFromScoreAndQuest = (xScore, questId) => {
 }
 
 /**
- * Polls the database for eligible users and processes them.
+ * Polls the database for eligible users and processes them in batches.
  * @param {ethers.Contract} contract - The ethers contract instance.
  */
 async function pollDatabaseAndProcessUsers(contract) {
@@ -108,107 +108,123 @@ async function pollDatabaseAndProcessUsers(contract) {
         if (dbUpdateRetryQueue.size > 0) {
             console.log(`🔁 Retrying database updates for ${dbUpdateRetryQueue.size} user(s)...`);
             for (const [queueKey, { userAddress, questId }] of dbUpdateRetryQueue.entries()) {
-              const { error: updateError } = await supabase
-                .from('user_quests')
-                .update({
-                  received_verification_bonus: true,
-                })
-                .eq('user_address', userAddress)
-                .eq('quest_id', questId);
-          
-              if (updateError) {
-                console.error(`🚨 DB update retry failed for ${userAddress}:`, updateError.message);
-              } else {
-                console.log(`🎉 Successfully updated questId=${questId} for ${userAddress} on retry.`);
-                dbUpdateRetryQueue.delete(queueKey);
-              }
-            }
-          }
-
-        // 2. Find new users who are eligible.
-        const { data: users, error: selectError } = await supabase
-        .from('user_quests')
-        .select('user_address, quest_id')
-        .gt('quest_id', 1)
-        // .in('quest_id', [2, 3, 4]) // Explicitly targets only quests 2, 3, and 4
-        .eq('completed', true)
-        .eq('received_verification_bonus', false)
-
-        if (selectError) {
-            throw new Error(`Error fetching users from Supabase: ${selectError.message}`);
-        }
-
-        const usersToProcess = users.filter(user => {
-            const queueKey = `${user.user_address}:${user.quest_id}`;
-            return !dbUpdateRetryQueue.has(queueKey);
-        });
-
-        if (usersToProcess.length === 0) {
-            console.log("✅ No new users to process.");
-        } else {
-            console.log(`✨ Found ${usersToProcess.length} new user(s) to process.`);
-
-            // 3. Loop through each eligible user and process them.
-            for (const user of usersToProcess) {
-
-                const { data: user_score, error: user_score_error} = await supabase
-                .from('users')
-                .select('x_score')
-                .eq('user_address', user.user_address);
-
-                if (user_score_error) {
-                    console.error(`Error fetching user score from Supabase: ${user_score_error.message}`);
-                    continue;
-                }
-
-                console.log(`\nProcessing user: ${user.user_address} - Score: ${user_score[0].x_score}`);
-
-                const amountGP = getGPFromScoreAndQuest(user_score[0].x_score, user.quest_id);
-                if (amountGP === BigInt("0")) {
-                    console.log(`   - Skipping user: ${user.user_address} - No GP to grant.`);
-                    continue;
-                }
-
-                console.log(`   - Granting ${amountGP.toString()} GP to ${user.user_address}...`);
-
-                // Single on-chain tx for this milestone only
-                const txOk = await executeBonusTransaction(
-                    contract,
-                    user.user_address,
-                    amountGP
-                );
-
-                if (!txOk) {
-                    console.warn(
-                        `   - Skipping DB update for ${user.user_address} because tx failed.`
-                    );
-                    continue;
-                }
-
-                // On-chain tx succeeded; now update DB to reflect the new level
                 const { error: updateError } = await supabase
-                .from('user_quests')
-                .update({
-                    received_verification_bonus: true,
-                })
-                .eq('user_address', user.user_address)
-                .eq('quest_id', user.quest_id);
+                    .from('user_quests')
+                    .update({
+                        received_verification_bonus: true,
+                    })
+                    .eq('user_address', userAddress)
+                    .eq('quest_id', questId);
 
                 if (updateError) {
-                console.error(
-                    `🚨 CRITICAL: DB update failed for ${user.user_address} after successful tx. Adding to retry queue.`
-                );
-                // Store the level we *already granted on-chain* so we can safely retry the DB update only
-                const queueKey = `${user.user_address}:${user.quest_id}`;
-                dbUpdateRetryQueue.set(queueKey, { 
-                    userAddress: user.user_address, 
-                    questId: user.quest_id 
-                });
+                    console.error(`🚨 DB update retry failed for ${userAddress}:`, updateError.message);
                 } else {
-                console.log(
-                    `🎉 Successfully granted questId ${user.quest_id} bonus and updated DB for ${user.user_address}.`
-                );
+                    console.log(`🎉 Successfully updated questId=${questId} for ${userAddress} on retry.`);
+                    dbUpdateRetryQueue.delete(queueKey);
                 }
+            }
+        }
+
+        // 2. Fetch ALL eligible users using pagination
+        let allEligibleUsers = [];
+        let page = 0;
+        const PAGE_SIZE = 1000;
+        let hasMore = true;
+
+        while (hasMore) {
+            const { data: users, error: selectError } = await supabase
+                .from('user_quests')
+                .select('user_address, quest_id')
+                .gt('quest_id', 1)
+                // .in('quest_id', [2, 3, 4]) // Explicitly targets only quests 2, 3, and 4
+                .eq('completed', true)
+                .eq('received_verification_bonus', false)
+                .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+            if (selectError) {
+                throw new Error(`Error fetching users from Supabase: ${selectError.message}`);
+            }
+
+            if (users && users.length > 0) {
+                const newUsers = users.filter(user => {
+                    const queueKey = `${user.user_address}:${user.quest_id}`;
+                    return !dbUpdateRetryQueue.has(queueKey);
+                });
+                allEligibleUsers.push(...newUsers);
+
+                if (users.length < PAGE_SIZE) {
+                    hasMore = false;
+                } else {
+                    page++;
+                }
+            } else {
+                hasMore = false;
+            }
+        }
+
+        if (allEligibleUsers.length === 0) {
+            console.log("✅ No new users to process.");
+        } else {
+            console.log(`✨ Found ${allEligibleUsers.length} total new user(s) to process.`);
+
+            // 3. Fetch User Scores in Bulk to avoid N+1
+            const uniqueAddresses = [...new Set(allEligibleUsers.map(u => u.user_address.toLowerCase()))];
+            const scoresMap = new Map();
+            
+            // Chunk score fetching
+            const SCORE_CHUNK_SIZE = 500;
+            for (let i = 0; i < uniqueAddresses.length; i += SCORE_CHUNK_SIZE) {
+                const chunk = uniqueAddresses.slice(i, i + SCORE_CHUNK_SIZE);
+                const { data: userScores, error: scoreError } = await supabase
+                    .from('users')
+                    .select('user_address, x_score')
+                    .in('user_address', chunk);
+                
+                if (scoreError) {
+                    console.error(`Error fetching scores for chunk ${i}: ${scoreError.message}`);
+                    continue;
+                }
+                if (userScores) {
+                    userScores.forEach(s => scoresMap.set(s.user_address.toLowerCase(), s.x_score));
+                }
+            }
+
+            // 4. Group into batches and process
+            const TX_BATCH_SIZE = 25;
+            let currentBatchUsers = [];
+            let currentBatchAmounts = [];
+            let currentBatchMeta = [];
+
+            for (const user of allEligibleUsers) {
+                const score = scoresMap.get(user.user_address);
+                if (score === undefined) {
+                    console.warn(`⚠️ Score not found for ${user.user_address}, skipping.`);
+                    continue;
+                } else {
+                    console.log(`   - Score found for ${user.user_address}: ${score}`);
+                }
+
+                const amountGP = getGPFromScoreAndQuest(score, user.quest_id);
+                if (amountGP === BigInt("0")) {
+                    // console.log(`   - Skipping user: ${user.user_address} - No GP to grant.`);
+                    continue;
+                }
+
+                currentBatchUsers.push(user.user_address);
+                currentBatchAmounts.push(amountGP);
+                currentBatchMeta.push(user);
+
+                if (currentBatchUsers.length >= TX_BATCH_SIZE) {
+                    await processBatch(contract, currentBatchUsers, currentBatchAmounts, currentBatchMeta);
+                    currentBatchUsers = [];
+                    currentBatchAmounts = [];
+                    currentBatchMeta = [];
+                }
+            }
+
+            // Process remaining
+            if (currentBatchUsers.length > 0) {
+                await processBatch(contract, currentBatchUsers, currentBatchAmounts, currentBatchMeta);
             }
         }
 
@@ -221,45 +237,93 @@ async function pollDatabaseAndProcessUsers(contract) {
 }
 
 /**
- * Executes the 'grantBonusEXP' smart contract function.
+ * Processes a batch of users: sends transaction and updates DB.
+ */
+async function processBatch(contract, addresses, amounts, metaData) {
+    console.log(`\n🚀 Processing batch of ${addresses.length} users...`);
+    
+    const txSuccess = await executeBatchBonusTransaction(contract, addresses, amounts);
+
+    if (!txSuccess) {
+        console.warn(`❌ Batch transaction failed. Skipping DB updates for this batch.`);
+        return;
+    }
+
+    console.log(`📝 Updating database for ${metaData.length} users...`);
+    
+    // Update DB in parallel
+    const updatePromises = metaData.map(async (user) => {
+        const { error: updateError } = await supabase
+            .from('user_quests')
+            .update({ received_verification_bonus: true })
+            .eq('user_address', user.user_address)
+            .eq('quest_id', user.quest_id);
+
+        if (updateError) {
+             console.error(`🚨 CRITICAL: DB update failed for ${user.user_address} (Quest ${user.quest_id}). Adding to retry queue.`);
+             const queueKey = `${user.user_address}:${user.quest_id}`;
+             dbUpdateRetryQueue.set(queueKey, { 
+                 userAddress: user.user_address, 
+                 questId: user.quest_id 
+             });
+        }
+    });
+
+    await Promise.all(updatePromises);
+    console.log(`✅ Batch processing complete.`);
+}
+
+/**
+ * Executes the 'batchGrantBonusEXP' smart contract function.
  * @param {ethers.Contract} contract The ethers contract instance.
- * @param {string} userAddress The address of the user to receive the bonus.
+ * @param {string[]} users Array of user addresses.
+ * @param {BigInt[]} amounts Array of amounts.
  * @returns {Promise<boolean>} True if the transaction was successful, otherwise false.
  */
-async function executeBonusTransaction(contract, userAddress, amount) {
+async function executeBatchBonusTransaction(contract, users, amounts) {
     try {
-        console.log(`   - Attempting to grant ${amount} EXP to ${userAddress}...`);
+        const totalAmount = amounts.reduce((a, b) => a + b, 0n);
+        console.log(`   - Attempting to grant total ${totalAmount} EXP to ${users.length} users...`);
 
         const feeData = await contract.runner.provider.getFeeData();
-        console.log("   - Current Fee Data:", {
+        /* console.log("   - Current Fee Data:", {
             maxFeePerGas: ethers.formatUnits(feeData.maxFeePerGas, "gwei"),
             maxPriorityFeePerGas: ethers.formatUnits(feeData.maxPriorityFeePerGas, "gwei"),
-        });
+        }); */
 
         const priorityFee = feeData.maxPriorityFeePerGas + ethers.parseUnits("2", "gwei");
 
         // Estimate gas
-        const gasEstimate = await contract.grantBonusEXP.estimateGas(userAddress, amount);
+        let gasEstimate;
+        try {
+            gasEstimate = await contract.batchGrantBonusEXP.estimateGas(users, amounts);
+            // console.log(`   - Estimated gas: ${gasEstimate}`);
+        } catch (error) {
+             console.warn(`   - Gas estimation failed: ${error.message}. Using fallback.`);
+             // Fallback: ~100k per user + 100k base
+             gasEstimate = BigInt(100000) * BigInt(users.length) + BigInt(100000);
+        }
+        
         const gasLimitWithBuffer = (gasEstimate * BigInt(120)) / BigInt(100); // 20% buffer
-        console.log(`   - Estimated gas: ${gasEstimate}, Gas limit with buffer: ${gasLimitWithBuffer}`);
 
         // Send the transaction
-        const tx = await contract.grantBonusEXP(userAddress, amount, {
+        const tx = await contract.batchGrantBonusEXP(users, amounts, {
             gasLimit: gasLimitWithBuffer,
             maxPriorityFeePerGas: priorityFee,
             maxFeePerGas: feeData.maxFeePerGas,
         });
 
+        console.log(`   - Batch Tx Sent: ${tx.hash}. Waiting...`);
         const receipt = await tx.wait();
-        console.log(`🎉 Transaction Mined! Block number: ${receipt.blockNumber}`);
+        console.log(`🎉 Batch Transaction Mined! Block number: ${receipt.blockNumber}`);
         return true;
 
     } catch (error) {
         if (error.code === 'CALL_EXCEPTION' || error.reason) {
-            console.warn(`   - Transaction failed, likely already executed by another bot. Reason: ${error.reason}`);
+            console.warn(`   - Transaction failed. Reason: ${error.reason}`);
             return false;
         } else if (error.code === 'INSUFFICIENT_FUNDS') {
-            console.error("   - Transaction failed: Insufficient funds for gas * price + value.");
+            console.error("   - Transaction failed: Insufficient funds.");
             process.exit(1);
             return false;
         } else {
