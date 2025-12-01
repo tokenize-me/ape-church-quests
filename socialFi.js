@@ -177,7 +177,7 @@ async function pollDatabaseAndProcessUsers(contract) {
                 const chunk = uniqueAddresses.slice(i, i + SCORE_CHUNK_SIZE);
                 const { data: userScores, error: scoreError } = await supabase
                     .from('users')
-                    .select('user_address, x_score')
+                    .select('user_address, x_score, x_handle')
                     .in('user_address', chunk);
                 
                 if (scoreError) {
@@ -185,7 +185,7 @@ async function pollDatabaseAndProcessUsers(contract) {
                     continue;
                 }
                 if (userScores) {
-                    userScores.forEach(s => scoresMap.set(s.user_address.toLowerCase(), s.x_score));
+                    userScores.forEach(s => scoresMap.set(s.user_address.toLowerCase(), { score: s.x_score, handle: s.x_handle }));
                 }
             }
 
@@ -196,17 +196,18 @@ async function pollDatabaseAndProcessUsers(contract) {
             let currentBatchMeta = [];
 
             for (const user of allEligibleUsers) {
-                const score = scoresMap.get(user.user_address);
-                if (score === undefined) {
+                const userData = scoresMap.get(user.user_address.toLowerCase());
+                if (!userData) {
                     console.warn(`⚠️ Score not found for ${user.user_address}, skipping.`);
                     continue;
-                } else {
-                    console.log(`   - Score found for ${user.user_address}: ${score}`);
                 }
+
+                const { score, handle } = userData;
+                // console.log(`   - Score found for ${user.user_address} (${handle}): ${score}`);
 
                 const amountGP = getGPFromScoreAndQuest(score, user.quest_id);
                 if (amountGP === BigInt("0")) {
-                    // console.log(`   - Skipping user: ${user.user_address} - No GP to grant.`);
+                    console.log(`   - Skipping user: ${user.user_address} (${handle}) - Quest: ${user.quest_id}, Score: ${score} -> No GP to grant.`);
                     continue;
                 }
 
