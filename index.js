@@ -128,15 +128,32 @@ async function pollDatabaseAndProcessUsers(contract, userInfoContract) {
           }
 
         // 2. Find new users who are eligible.
-        const { data: users, error: selectError } = await supabase
-        .from('users')
-        .select('user_address, x_handle, verification_bonus_level, x_score')
-        .eq('x_verified', true)
-        .lt('verification_bonus_level', MAX_LEVEL);
+        let users = [];
+        let from = 0;
+        const limit = 1000;
+        let fetched = 0;
 
-        if (selectError) {
-            throw new Error(`Error fetching users from Supabase: ${selectError.message}`);
-        }
+        do {
+            const { data: batch, error: selectError } = await supabase
+                .from('users')
+                .select('user_address, x_handle, verification_bonus_level, x_score')
+                .eq('x_verified', true)
+                .lt('verification_bonus_level', MAX_LEVEL)
+                .range(from, from + limit - 1);
+
+            if (selectError) {
+                throw new Error(`Error fetching users from Supabase: ${selectError.message}`);
+            }
+
+            if (batch && batch.length > 0) {
+                users = users.concat(batch);
+                fetched = batch.length;
+                from += limit;
+                console.log(`   - Fetched ${fetched} users (total so far: ${users.length})...`);
+            } else {
+                fetched = 0;
+            }
+        } while (fetched === limit);
 
         const usersToProcess = users.filter(user => !dbUpdateRetryQueue.has(user.user_address));
 
