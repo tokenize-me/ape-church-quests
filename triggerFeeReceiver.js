@@ -15,7 +15,7 @@ const CONTRACT_ABI = ["function triggerETH() external"];
 // --- Constants ---
 const POLLING_INTERVAL = 600_000; // 10 minutes
 
-const APE_AMOUNT = ethers.parseUnits("400", "ether");
+const APE_AMOUNT = ethers.parseUnits("1000", "ether");
 
 // --- Validation ---
 if (!APECHAIN_RPC_URL || !PRIVATE_KEY) {
