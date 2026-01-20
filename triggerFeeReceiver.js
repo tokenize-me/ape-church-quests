@@ -8,7 +8,7 @@ const {
     PRIVATE_KEY,
 } = process.env;
 
-const FEE_RECEIVER = "0xb36933e6817d31411C47f2Bc2848db1750867923";
+const FEE_RECEIVER = "0xA788DC64a1ddBF7A2a1da485c749D4c6573D83be";
 
 // Your Contract ABI - updated with the correct functions
 const CONTRACT_ABI = ["function triggerETH() external"];
