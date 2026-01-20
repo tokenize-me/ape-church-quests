@@ -15,7 +15,7 @@ const ROULETTE = "0x1f48A104C1808eb4107f3999999D36aeafEC56d5";
 // Your Contract ABI - updated with the correct functions
 const CONTRACT_ABI = ["function play(address player, bytes calldata gameData) external payable"];
 // --- Constants ---
-const POLLING_INTERVAL = 120_000; // 2 minutes
+const POLLING_INTERVAL = 300_000; // 5 minutes
 
 const APE_AMOUNT = ethers.parseUnits("500", "ether");
 
