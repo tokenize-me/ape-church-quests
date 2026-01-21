@@ -17,13 +17,15 @@ const GIMBO_SMASH = "0x17e219844F25F3FED6E422DdaFfD2E6557eBCEd3";
 // Your Contract ABI - updated with the correct functions
 const CONTRACT_ABI = ["function play(address player, bytes calldata gameData) external payable"];
 // --- Constants ---
-const POLLING_INTERVAL = 300_000; // 5 minutes
+const POLLING_INTERVAL = 60_000; // 60 seconds
 
-const CHECK_AMOUNT_UNFORMATTED = "201";
-const CHECK_AMOUNT = ethers.parseUnits(CHECK_AMOUNT_UNFORMATTED, "ether");
-
-const MINIMUM_BALANCE_UNFORMATTED = "500";
+const MINIMUM_BALANCE_UNFORMATTED = "600";
 const MINIMUM_BALANCE = ethers.parseUnits(MINIMUM_BALANCE_UNFORMATTED, "ether");
+
+const MAX_BET = 600;
+const MIN_BET = 200;
+
+const MAX_BET_PERCENTAGE = 0.33;
 
 // --- Validation ---
 if (!APECHAIN_RPC_URL || !BOT_PRIVATE_KEY) {
@@ -83,19 +85,20 @@ async function pollDatabaseAndProcessUsers(games, wallet) {
     const gameName = gameToPlay.name;
     try {
         const apeBalance = await gameContract.runner.provider.getBalance(wallet.address);
-        console.log(`🔍 Ape balance: ${apeBalance}`);
+        const formattedBalance = parseFloat(ethers.formatUnits(apeBalance, "ether"));
+        console.log(`🔍 Ape balance: ${formattedBalance}`);
         if (apeBalance < MINIMUM_BALANCE) {
             console.log(`❌ Ape balance is less than ${MINIMUM_BALANCE_UNFORMATTED} APE`);
             return;
         }
 
-        const formattedBalance = parseFloat(ethers.formatUnits(apeBalance, "ether"));
-        const minBalance = Math.floor(formattedBalance * 0.05);
+        // determine an amount to play with, below 33% of the balance
+        let amountToPlay = Math.floor(formattedBalance * Math.random() * MAX_BET_PERCENTAGE);
 
-        // determine an amount to play with, between 5% and 20% of the balance
-        let amountToPlay = Math.floor(formattedBalance * Math.random() * 0.2);
-        if (amountToPlay < minBalance) {
-            amountToPlay = minBalance;
+        if (amountToPlay < MIN_BET) {
+            amountToPlay = MIN_BET;
+        } else if (amountToPlay > MAX_BET) {
+            amountToPlay = MAX_BET;
         }
 
         console.log(`🔍 Playing ${gameName}...`);
