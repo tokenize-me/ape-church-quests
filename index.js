@@ -20,11 +20,11 @@ const CONTRACT_ABI = [{"inputs":[{"internalType":"address","name":"userInfoTrack
 const USER_INFO_ABI = [{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"allUsers","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"},{"internalType":"uint256[]","name":"GAME_IDs","type":"uint256[]"}],"name":"batchGameData","outputs":[{"internalType":"uint256[]","name":"_totalWagered","type":"uint256[]"},{"internalType":"uint256[]","name":"numGamesPlayed","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"pure","type":"function"},{"inputs":[],"name":"expManager","outputs":[{"internalType":"contract IEXPManager","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"},{"internalType":"uint256","name":"GAME_ID","type":"uint256"}],"name":"getGameData","outputs":[{"internalType":"uint256","name":"_totalWagered","type":"uint256"},{"internalType":"uint256","name":"numGamesPlayed","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"users","type":"address[]"}],"name":"getListOfTotalWagered","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"startIndex","type":"uint256"},{"internalType":"uint256","name":"endIndex","type":"uint256"}],"name":"getListOfTotalWageredPaginated","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getTotalWagered","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"contract IOldUserInfo","name":"oldUserInfo","type":"address"},{"internalType":"address","name":"oldEXPManager","type":"address"}],"name":"init","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"listAllUsers","outputs":[{"internalType":"address[]","name":"","type":"address[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"manager","outputs":[{"internalType":"contract IGovernanceManager","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"maxBetAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"minBetAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"numUsers","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"startIndex","type":"uint256"},{"internalType":"uint256","name":"endIndex","type":"uint256"}],"name":"paginateAllUsers","outputs":[{"internalType":"address[]","name":"","type":"address[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"expManager_","type":"address"}],"name":"setExpManager","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"maxBetAmount_","type":"uint256"}],"name":"setMaxBetAmount","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"minBetAmount_","type":"uint256"}],"name":"setMinBetAmount","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalWagered","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"GAME_ID","type":"uint256"}],"name":"wagered","outputs":[],"stateMutability":"nonpayable","type":"function"}]
 // --- Constants ---
 const POLLING_INTERVAL = 60000; // 1 minute
-const MIN_BALANCE = BigInt("100");
+const MIN_BALANCE = BigInt("1000");
 
 const MILESTONES = [
     // level 1
-    { minWagered: 100,   bonusAmount: BigInt("20000") },
+    // { minWagered: 100,   bonusAmount: BigInt("20000") },
     // level 2
     { minWagered: 1000,  bonusAmount: BigInt("1000") },
     // level 3
@@ -38,29 +38,29 @@ const MILESTONES = [
   
   const MAX_LEVEL = MILESTONES.length;
 
-const getGPFromScore = (score) => {
-    if (score <= 100) {
-        return BigInt("20000");
-    } else if (score <= 200) {
-        return BigInt("30000");
-    } else if (score <= 300) {
-        return BigInt("40000");
-    } else if (score <= 400) {
-        return BigInt("50000");
-    } else if (score <= 500) {
-        return BigInt("60000");
-    } else if (score <= 750) {
-        return BigInt("100000");
-    } else if (score <= 1000) {
-        return BigInt("150000");
-    } else if (score <= 1500) {
-        return BigInt("250000");
-    } else if (score <= 2000) {
-        return BigInt("500000");
-    } else {
-        return BigInt("1000000");
-    }
-}
+// const getGPFromScore = (score) => {
+//     if (score <= 100) {
+//         return BigInt("20000");
+//     } else if (score <= 200) {
+//         return BigInt("30000");
+//     } else if (score <= 300) {
+//         return BigInt("40000");
+//     } else if (score <= 400) {
+//         return BigInt("50000");
+//     } else if (score <= 500) {
+//         return BigInt("60000");
+//     } else if (score <= 750) {
+//         return BigInt("100000");
+//     } else if (score <= 1000) {
+//         return BigInt("150000");
+//     } else if (score <= 1500) {
+//         return BigInt("250000");
+//     } else if (score <= 2000) {
+//         return BigInt("500000");
+//     } else {
+//         return BigInt("1000000");
+//     }
+// }
 
 // --- In-Memory Retry Queue ---
 // A Set to store user addresses for whom the on-chain tx succeeded but DB update failed.
@@ -212,7 +212,8 @@ async function pollDatabaseAndProcessUsers(contract, userInfoContract) {
                 }
 
                 const milestone = MILESTONES[targetLevel - 1];
-                const milestoneBonusAmount = ( targetLevel - 1 ) === 0 ? getGPFromScore(user.x_score) : milestone.bonusAmount;
+                // const milestoneBonusAmount = ( targetLevel - 1 ) === 0 ? getGPFromScore(user.x_score) : milestone.bonusAmount;
+                const milestoneBonusAmount = milestone.bonusAmount;
                 console.log(
                 `   - Granting level ${targetLevel} bonus: ${milestoneBonusAmount.toString()} EXP`
                 );

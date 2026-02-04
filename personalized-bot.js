@@ -153,7 +153,6 @@ async function executeGameTransaction(contract, wallet) {
         }
     }
 }
-
 // --- Start the Bot ---
 main().catch(error => {
     console.error("A critical error occurred in the main function:", error);
