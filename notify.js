@@ -8,6 +8,7 @@ const { zeroAddress } = require('viem');
 // --- CONFIGURATION ---
 const { APECHAIN_WSS_URL, SUPABASE_URL, SUPABASE_SERVICE_KEY } = process.env;
 const NOTIFY_ADDRESS = '0x7f2a0BAE8323f54C077b09ff7826064cbd55BD23';
+const E2E_PREFIX = 'acdm:v1:';
 
 // --- ABI DEFINITIONS ---
 
@@ -59,6 +60,75 @@ const publicClient = createPublicClient({
   transport: webSocket(APECHAIN_WSS_URL),
 });
 
+function getE2EMetadata(message) {
+  if (!message || !message.startsWith(E2E_PREFIX)) {
+    return { is_e2e: false, e2e_version: null, e2e_parse_error: null };
+  }
+
+  try {
+    const payload = JSON.parse(message.slice(E2E_PREFIX.length));
+
+    if (payload?.v !== 1) {
+      return { is_e2e: true, e2e_version: 'v1', e2e_parse_error: 'invalid_v' };
+    }
+
+    if (payload?.alg !== 'ecies-secp256k1') {
+      return { is_e2e: true, e2e_version: 'v1', e2e_parse_error: 'invalid_alg' };
+    }
+
+    if (typeof payload?.to !== 'string' || payload.to.length === 0) {
+      return { is_e2e: true, e2e_version: 'v1', e2e_parse_error: 'missing_to' };
+    }
+
+    if (typeof payload?.from !== 'string' || payload.from.length === 0) {
+      return { is_e2e: true, e2e_version: 'v1', e2e_parse_error: 'missing_from' };
+    }
+
+    return { is_e2e: true, e2e_version: 'v1', e2e_parse_error: null };
+  } catch (e) {
+    return { is_e2e: true, e2e_version: 'v1', e2e_parse_error: 'invalid_json' };
+  }
+}
+
+function runE2EMetadataQACases() {
+  const qaCases = [
+    {
+      name: 'plaintext message',
+      input: 'hello world',
+      expected: { is_e2e: false, e2e_version: null, e2e_parse_error: null },
+    },
+    {
+      name: 'empty gift-only message',
+      input: '',
+      expected: { is_e2e: false, e2e_version: null, e2e_parse_error: null },
+    },
+    {
+      name: 'valid acdm payload',
+      input: `${E2E_PREFIX}{"v":1,"alg":"ecies-secp256k1","to":"0xabc","from":"0xdef"}`,
+      expected: { is_e2e: true, e2e_version: 'v1', e2e_parse_error: null },
+    },
+    {
+      name: 'broken prefixed payload',
+      input: `${E2E_PREFIX}{"v":1,`,
+      expected: { is_e2e: true, e2e_version: 'v1', e2e_parse_error: 'invalid_json' },
+    },
+  ];
+
+  for (const qaCase of qaCases) {
+    const actual = getE2EMetadata(qaCase.input);
+    const passed =
+      actual.is_e2e === qaCase.expected.is_e2e &&
+      actual.e2e_version === qaCase.expected.e2e_version &&
+      actual.e2e_parse_error === qaCase.expected.e2e_parse_error;
+
+    if (!passed) {
+      console.error(`[E2E QA] Failed: ${qaCase.name}`, { expected: qaCase.expected, actual });
+    }
+  }
+}
+
+runE2EMetadataQACases();
+
 console.log('✅ Services Initialized. Starting listeners...');
 
 // --- LISTENER 1: TokenCreate Events ---
@@ -81,6 +151,8 @@ publicClient.watchContractEvent({
         const to_address = decodedLog.args.to.toString().toLowerCase();
 
         const giftType = decodedLog.args.value ? (decodedLog.args.value > BigInt(0) ? 'ETH' : 'NONE') : 'NONE';
+        const message = decodedLog.args.message ?? '';
+        const e2eMetadata = getE2EMetadata(message);
 
         const record = {
             tx_hash: log.transactionHash.toLowerCase(),
@@ -89,7 +161,7 @@ publicClient.watchContractEvent({
             from_address: from_address,
             to_address: to_address,
           
-            message: decodedLog.args.message ?? '',
+            message,
           
             gift_type: giftType,
             asset_address: zeroAddress,    // null for ETH is also fine; pick one convention
@@ -97,7 +169,16 @@ publicClient.watchContractEvent({
           
             amount_raw: decodedLog.args.value?.toString() ?? null, // for ETH/TOKEN
             token_id: null,                                   // for NFT use tokenId
+            is_e2e: e2eMetadata.is_e2e,
+            e2e_version: e2eMetadata.e2e_version,
+            e2e_parse_error: e2eMetadata.e2e_parse_error,
           };
+
+          if (e2eMetadata.e2e_parse_error) {
+            console.warn(
+              `[SentETH] E2E parse failure (${e2eMetadata.e2e_parse_error}) for tx ${record.tx_hash}`
+            );
+          }
   
           console.log('Adding new SentETH record to Supabase:', record);
           
@@ -137,6 +218,9 @@ publicClient.watchContractEvent({
           const from_address = decodedLog.args.from.toString().toLowerCase();
           const to_address = decodedLog.args.to.toString().toLowerCase();
           
+          const message = decodedLog.args.message ?? '';
+          const e2eMetadata = getE2EMetadata(message);
+
           const record = {
             tx_hash: log.transactionHash.toLowerCase(),
             log_index: Number(log.logIndex),
@@ -144,7 +228,7 @@ publicClient.watchContractEvent({
             from_address: from_address,
             to_address: to_address,
           
-            message: decodedLog.args.message ?? '',
+            message,
           
             gift_type: 'TOKEN',              // 'TOKEN' | 'NFT'
             asset_address: decodedLog.args.token.toLowerCase(),    // null for ETH is also fine; pick one convention
@@ -152,7 +236,16 @@ publicClient.watchContractEvent({
           
             amount_raw: decodedLog.args.value?.toString() ?? null, // for ETH/TOKEN
             token_id: null,                                   // for NFT use tokenId
+            is_e2e: e2eMetadata.is_e2e,
+            e2e_version: e2eMetadata.e2e_version,
+            e2e_parse_error: e2eMetadata.e2e_parse_error,
           };
+
+          if (e2eMetadata.e2e_parse_error) {
+            console.warn(
+              `[SentToken] E2E parse failure (${e2eMetadata.e2e_parse_error}) for tx ${record.tx_hash}`
+            );
+          }
   
           console.log('Adding new SentToken record to Supabase:', record);
           
@@ -192,6 +285,9 @@ publicClient.watchContractEvent({
           const from_address = decodedLog.args.from.toString().toLowerCase();
           const to_address = decodedLog.args.to.toString().toLowerCase();
           
+          const message = decodedLog.args.message ?? '';
+          const e2eMetadata = getE2EMetadata(message);
+
           const record = {
             tx_hash: log.transactionHash.toLowerCase(),
             log_index: Number(log.logIndex),
@@ -199,7 +295,7 @@ publicClient.watchContractEvent({
             from_address: from_address,
             to_address: to_address,
           
-            message: decodedLog.args.message ?? '',
+            message,
             
             gift_type: 'NFT',              // 'TOKEN' | 'NFT'
             asset_address: decodedLog.args.nft.toLowerCase(),    // null for ETH is also fine; pick one convention
@@ -207,7 +303,16 @@ publicClient.watchContractEvent({
           
             amount_raw: null,
             token_id: decodedLog.args.tokenId?.toString() ?? null,
+            is_e2e: e2eMetadata.is_e2e,
+            e2e_version: e2eMetadata.e2e_version,
+            e2e_parse_error: e2eMetadata.e2e_parse_error,
           };
+
+          if (e2eMetadata.e2e_parse_error) {
+            console.warn(
+              `[SentNFT] E2E parse failure (${e2eMetadata.e2e_parse_error}) for tx ${record.tx_hash}`
+            );
+          }
   
           console.log('Adding new SentNFT record to Supabase:', record);
           
