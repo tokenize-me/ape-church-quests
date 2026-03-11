@@ -77,6 +77,8 @@ const SINGLE_GAS_BUFFER_PERCENT = 105n;
 const ATTEMPT_COOLDOWN_MS = 20_000;
 const STALE_IN_FLIGHT_MS = 120_000;
 const COMPLETED_GAME_TTL_MS = 6 * 60 * 60 * 1000;
+const EVENT_DEDUPE_TTL_MS = 2 * 60 * 1000;
+const RECOVERY_BURST_TXS = 3;
 const FULL_RESOLVE_MAX_GAS = GAME_FULL_RESOLVE_MAX_GAS
   ? BigInt(GAME_FULL_RESOLVE_MAX_GAS)
   : DEFAULT_FULL_RESOLVE_MAX_GAS;
@@ -100,6 +102,8 @@ const knownGames = new Map();
 const inFlightGames = new Map();
 const recentAttempts = new Map();
 const completedGames = new Map();
+const queuedRetries = new Set();
+const seenLogs = new Map();
 
 let pollingInProgress = false;
 const stopWatchers = [];
@@ -150,6 +154,12 @@ function clearExpiredState() {
     if (currentTime - completedAt > COMPLETED_GAME_TTL_MS) {
       completedGames.delete(gameId);
       knownGames.delete(gameId);
+    }
+  }
+
+  for (const [logKey, seenAt] of seenLogs.entries()) {
+    if (currentTime - seenAt > EVENT_DEDUPE_TTL_MS) {
+      seenLogs.delete(logKey);
     }
   }
 }
@@ -206,7 +216,10 @@ function decrementPendingTx(gameId) {
 
   if (state.pendingTxs === 0 && !isCompleted(gameId)) {
     clearInFlight(gameId);
-    markRecentAttempt(gameId);
+    if (queuedRetries.has(gameId)) {
+      queuedRetries.delete(gameId);
+      void attemptGameResolution(gameId, 'queued-retry', knownGames.get(gameId)?.numSpins ?? null);
+    }
   }
 }
 
@@ -233,6 +246,22 @@ function isExpectedRaceError(error) {
     message.includes('resolved') ||
     message.includes('missing revert data')
   );
+}
+
+function buildLogKey(prefix, log) {
+  return `${prefix}:${log.transactionHash}:${String(log.logIndex ?? log.blockNumber ?? 'na')}`;
+}
+
+function shouldProcessLog(prefix, log) {
+  const key = buildLogKey(prefix, log);
+  const seenAt = seenLogs.get(key);
+
+  if (typeof seenAt === 'number' && now() - seenAt <= EVENT_DEDUPE_TTL_MS) {
+    return false;
+  }
+
+  seenLogs.set(key, now());
+  return true;
 }
 
 async function getFeeOverrides() {
@@ -374,7 +403,8 @@ async function attemptGameResolution(gameId, source, numSpins = null) {
   }
 
   if (isInFlight(gameIdKey)) {
-    console.log(`[${source}] Game ${gameIdKey} is already being processed, skipping duplicate trigger.`);
+    queuedRetries.add(gameIdKey);
+    console.log(`[${source}] Game ${gameIdKey} already in-flight; queued follow-up resolution attempt.`);
     return;
   }
 
@@ -412,12 +442,19 @@ async function attemptGameResolution(gameId, source, numSpins = null) {
   }
 
   console.warn(
-    `[${source}] No numSpins cached for game ${gameIdKey}; submitting a single recovery chunk and letting the next poll continue if needed.`
+    `[${source}] No numSpins cached for game ${gameIdKey}; submitting ${RECOVERY_BURST_TXS} recovery chunk tx(s).`
   );
 
-  const submittedRecoveryChunk = await submitChunkResolve(gameIdKey, `${source}:recovery`, '1/?');
+  let submittedAny = false;
+  for (let i = 0; i < RECOVERY_BURST_TXS; i += 1) {
+    const submittedRecoveryChunk = await submitChunkResolve(gameIdKey, `${source}:recovery`, `${i + 1}/?`);
+    if (!submittedRecoveryChunk) {
+      break;
+    }
+    submittedAny = true;
+  }
 
-  if (!submittedRecoveryChunk && !isCompleted(gameIdKey)) {
+  if (!submittedAny && !isCompleted(gameIdKey)) {
     clearInFlight(gameIdKey);
     markRecentAttempt(gameIdKey);
   }
@@ -465,6 +502,10 @@ async function startListener() {
       clearExpiredState();
 
       for (const log of logs) {
+        if (!shouldProcessLog('RandomnessReturned', log)) {
+          continue;
+        }
+
         try {
           const decodedLog = decodeEventLog({
             abi: GAME_PROCESSOR_ABI,
@@ -493,6 +534,10 @@ async function startListener() {
     eventName: 'GameResolutionProgress',
     onLogs: async (logs) => {
       for (const log of logs) {
+        if (!shouldProcessLog('GameResolutionProgress', log)) {
+          continue;
+        }
+
         try {
           const decodedLog = decodeEventLog({
             abi: GAME_PROCESSOR_ABI,
@@ -525,6 +570,10 @@ async function startListener() {
     eventName: 'GameEnded',
     onLogs: async (logs) => {
       for (const log of logs) {
+        if (!shouldProcessLog('GameEnded', log)) {
+          continue;
+        }
+
         try {
           const decodedLog = decodeEventLog({
             abi: GAME_PROCESSOR_ABI,
