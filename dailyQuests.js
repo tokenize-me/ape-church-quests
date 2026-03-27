@@ -19,6 +19,7 @@ const CONTRACT_ABI = [{"inputs":[{"internalType":"address","name":"userInfoTrack
 
 // --- Constants ---
 const POLLING_INTERVAL = 10000; // 10 seconds
+const MAX_AMOUNT = BigInt(20000);
 
 // --- In-Memory Retry Queue ---
 // A Set to store user addresses for whom the on-chain tx succeeded but DB update failed.
@@ -200,8 +201,22 @@ async function processBatch(contract, addresses, amounts, metaData) {
  */
 async function executeBatchBonusTransaction(contract, users, amounts) {
     try {
+
+        // if amounts has a value greater than MAX_AMOUNT, skip the transaction
+        if (amounts.some(amount => amount > MAX_AMOUNT)) {
+            console.log(`   - Amount is too high: ${amounts.find(amount => amount > MAX_AMOUNT)}. Skipping...`);
+            return false;
+        }
+        
         const totalAmount = amounts.reduce((a, b) => a + b, 0n);
         console.log(`   - Attempting to grant total ${totalAmount} EXP to ${users.length} users...`);
+
+        const averageAmount = totalAmount / BigInt(users.length);
+        console.log(`   - Average amount: ${averageAmount}`);
+        if (averageAmount > MAX_AVERAGE_AMOUNT) {
+            console.log(`   - Average amount is too high: ${averageAmount}. Skipping...`);
+            return false;
+        }
 
         const feeData = await contract.runner.provider.getFeeData();
         /* console.log("   - Current Fee Data:", {
