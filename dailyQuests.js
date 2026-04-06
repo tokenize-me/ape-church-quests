@@ -213,7 +213,7 @@ async function executeBatchBonusTransaction(contract, users, amounts) {
 
         const averageAmount = totalAmount / BigInt(users.length);
         console.log(`   - Average amount: ${averageAmount}`);
-        if (averageAmount > MAX_AVERAGE_AMOUNT) {
+        if (averageAmount > MAX_AMOUNT) {
             console.log(`   - Average amount is too high: ${averageAmount}. Skipping...`);
             return false;
         }
