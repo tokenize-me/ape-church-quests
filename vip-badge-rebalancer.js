@@ -27,7 +27,7 @@ const LEADERBOARD_QUERY = `
 `;
 
 // --- Constants ---
-const POLLING_INTERVAL = 600_000; // 10 minutes
+const POLLING_INTERVAL = 300_000; // 5 minutes
 const TOP_N = 10;
 const SUBGRAPH_FETCH_N = 15; // over-fetch so ignored addresses don't starve the top 10
 const IGNORED_ADDRESSES = new Set([
