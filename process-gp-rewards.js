@@ -14,8 +14,8 @@ const REWARD_MANAGER_ABI = ["function distributeRewards() external"];
 const GP_TOKEN_ABI = ["function balanceOf(address) external view returns (uint256)"];
 
 // --- Constants ---
-const POLLING_INTERVAL = 900_000; // 15 minutes
-const MIN_BALANCE = 10_000n;
+const POLLING_INTERVAL = 180_000; // 3 minutes
+const MIN_BALANCE = 50_000n;
 
 // --- Validation ---
 if (!APECHAIN_RPC_URL || !PRIVATE_KEY) {
