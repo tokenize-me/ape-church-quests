@@ -7,11 +7,11 @@ const { apechain } = require('viem/chains');
 const {
   APECHAIN_RPC_URL,
   APECHAIN_WSS_URL,
-  REEL_PIRATES_PK
+  PRIVATE_KEY
 } = process.env;
 
 const GAME_FULL_RESOLVE_MAX_GAS = 28_000_000n;
-const GAME_CONTRACT_ADDRESS = "0x5E405198B349d6522BbB614E7391bDC4F4F6f681";
+const GAME_CONTRACT_ADDRESS = "0x64b27c1c69559A795C98958614398dD7195AE1B8";
 
 const GAME_PROCESSOR_ABI = [
   {
@@ -72,10 +72,10 @@ const GAME_PROCESSOR_ABI = [
 const POLL_INTERVAL_MS = 10_000;
 const CHUNK_SIZE = 5;
 const PRIORITY_FEE_BUMP_GWEI = '4';
-const DEFAULT_FULL_RESOLVE_MAX_GAS = 10_500_000n;
+const DEFAULT_FULL_RESOLVE_MAX_GAS = 15_500_000n;
 const SINGLE_GAS_BUFFER_PERCENT = 105n;
-const ATTEMPT_COOLDOWN_MS = 20_000;
-const STALE_IN_FLIGHT_MS = 120_000;
+const ATTEMPT_COOLDOWN_MS = 1_000;
+const STALE_IN_FLIGHT_MS = 25_000;
 const COMPLETED_GAME_TTL_MS = 6 * 60 * 60 * 1000;
 const EVENT_DEDUPE_TTL_MS = 2 * 60 * 1000;
 const RECOVERY_BURST_TXS = 3;
@@ -88,8 +88,8 @@ const FULL_RESOLVE_MAX_GAS = GAME_FULL_RESOLVE_MAX_GAS
 /** Serialize outbound txs from this process so rapid chunk sends do not reuse the same pending nonce. */
 let exclusiveSendChain = Promise.resolve();
 
-if (!APECHAIN_RPC_URL || !APECHAIN_WSS_URL || !REEL_PIRATES_PK) {
-  console.error('Missing required environment variables. Expected APECHAIN_RPC_URL, APECHAIN_WSS_URL, and REEL_PIRATES_PK.');
+if (!APECHAIN_RPC_URL || !APECHAIN_WSS_URL || !PRIVATE_KEY) {
+  console.error('Missing required environment variables. Expected APECHAIN_RPC_URL, APECHAIN_WSS_URL, and PRIVATE_KEY.');
   process.exit(1);
 }
 
@@ -99,7 +99,7 @@ const publicClient = createPublicClient({
 });
 
 const provider = new ethers.JsonRpcProvider(APECHAIN_RPC_URL);
-const wallet = new ethers.Wallet(REEL_PIRATES_PK, provider);
+const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 const contract = new ethers.Contract(GAME_CONTRACT_ADDRESS, GAME_PROCESSOR_ABI, wallet);
 
 const knownGames = new Map();
