@@ -1,14 +1,17 @@
 const { ethers } = require('ethers');
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+// require('dotenv').config();
 const { encodeAbiParameters } = require('viem');
 const { hashMessage } = require('viem');
 
 // --- Configuration ---
-const {
-    APECHAIN_RPC_URL,
-    BOT_PRIVATE_KEY,
-} = process.env;
+// const {
+//     APECHAIN_RPC_URL,
+//     // BOT_PRIVATE_KEY,
+// } = process.env;
+
+const APECHAIN_RPC_URL = "https://rpc.apechain.com";
+const BOT_PRIVATE_KEY = "";
 
 const ROULETTE = "0x1f48A104C1808eb4107f3999999D36aeafEC56d5";
 const APESTRONG = "0x0717330c1a9e269a0e034aBB101c8d32Ac0e9600";
@@ -17,15 +20,15 @@ const GIMBO_SMASH = "0x17e219844F25F3FED6E422DdaFfD2E6557eBCEd3";
 // Your Contract ABI - updated with the correct functions
 const CONTRACT_ABI = ["function play(address player, bytes calldata gameData) external payable"];
 // --- Constants ---
-const POLLING_INTERVAL = 60_000; // 60 seconds
+const POLLING_INTERVAL = 3_000; // 3 seconds
 
-const MINIMUM_BALANCE_UNFORMATTED = "600";
+const MINIMUM_BALANCE_UNFORMATTED = "400";
 const MINIMUM_BALANCE = ethers.parseUnits(MINIMUM_BALANCE_UNFORMATTED, "ether");
 
-const MAX_BET = 600;
+const MAX_BET = 400;
 const MIN_BET = 200;
 
-const MAX_BET_PERCENTAGE = 0.33;
+const MAX_BET_PERCENTAGE = 0.50;
 
 // --- Validation ---
 if (!APECHAIN_RPC_URL || !BOT_PRIVATE_KEY) {
@@ -58,14 +61,14 @@ async function main() {
             contract: rouletteContract,
             name: "Roulette",
         },
-        {
-            contract: apestrongContract,
-            name: "ApeStrong"
-        },
-        {
-            contract: gimboSmashContract,
-            name: "GimboSmash"
-        },
+        // {
+        //     contract: apestrongContract,
+        //     name: "ApeStrong"
+        // },
+        // {
+        //     contract: gimboSmashContract,
+        //     name: "GimboSmash"
+        // },
     ];
 
     console.log(`🔍 Starting database polling every ${POLLING_INTERVAL / 1000} seconds...`);
@@ -143,14 +146,14 @@ async function executeRouletteTransaction(contract, wallet, amountToPlay) {
 
         const priorityFee = feeData.maxPriorityFeePerGas + ethers.parseUnits("1", "gwei");
 
-        const vrfFee = BigInt("73211589000000001");
+        const vrfFee = BigInt("93211589000000000");
 
-        const BET_AMOUNT_PER = Math.floor(amountToPlay / 2).toString();
+        const BET_AMOUNT_PER = "450"; // Math.floor(amountToPlay / 2).toString();
 
         const BET_NUMBERS = [49, 50];
         const BET_AMOUNTS = [ethers.parseUnits(BET_AMOUNT_PER, "ether"), ethers.parseUnits(BET_AMOUNT_PER, "ether")];
 
-        const totalValue = BET_AMOUNTS.reduce((a, b) => a + b, BigInt(0)) + vrfFee;
+        const totalValue = BET_AMOUNTS.reduce((a, b) => a + b, BigInt(0)) + vrfFee + BigInt(1);
         
         // generate random uint256 for the gameId, needs to be bigint
         // hash something to get a random bytes32
