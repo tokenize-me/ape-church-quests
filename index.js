@@ -168,8 +168,6 @@ async function pollDatabaseAndProcessUsers(contract, userInfoContract) {
 
                 const currentLevel = user.verification_bonus_level ?? 0;
 
-                
-
                 // Optional: sanity check on EXP balance
                 console.log(`   - Checking EXP balance for ${user.user_address}...`);
                 const apeWageredRaw = await userInfoContract.balanceOf(user.user_address);
