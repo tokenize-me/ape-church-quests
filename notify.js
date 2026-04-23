@@ -456,7 +456,7 @@ publicClient.watchContractEvent({
                 from: from_address,
                 tokenAddress: tokenAddr,
                 tokenSymbol: decodedLog.args.tokenSymbol ?? '',
-                isGP: tokenAddr === EXPManagerAddress,
+                isGP: tokenAddr === EXPManagerAddress.toLowerCase(),
                 rawValue: decodedLog.args.value?.toString() ?? '0',
                 message,
               },
