@@ -41,9 +41,9 @@ if (!APECHAIN_WSS_URL) throw new Error('Missing APECHAIN_WSS_URL');
 if (!ETH_PRIVATE_KEY)  throw new Error('Missing ETH_PRIVATE_KEY');
 
 // --- CONTRACTS ---
-const APECHAIN_NFT_ADDRESS = '0x4EaAc28eFfa63c02a8bEac560d29cF43e5920975';
+const APECHAIN_NFT_ADDRESS = '0xe8d4580880959d9E5de63f3f2531C1E1565D821D';
 const ETH_NFT_ADDRESS      = '0x4dE566Ac60e83015156CfD5C180f4bcAD320A56d';
-const ETH_RPC_URL = "https://eth.llamarpc.com";
+const ETH_RPC_URL = "https://eth-mainnet.g.alchemy.com/v2/bcMih1Lc3XtkmIJEAGzsp";
 const CROSSCHAIN_START_BLOCK = 37711430;
 
 // --- TUNABLES ---
@@ -61,6 +61,12 @@ const MAX_RETRIES               = 1;
 const RETRY_DELAY_MS            = 30 * 1000;
 const ETH_MAINNET_CHAIN_ID      = 1n;
 const LOW_BALANCE_THRESHOLD     = ethers.parseEther('0.01');
+
+// RPC retry settings — covers transient 429s / timeouts / network blips on
+// individual read calls. Backoff: 1s, 2s, 4s, 8s, 16s, 30s (capped).
+const RPC_MAX_ATTEMPTS          = 6;
+const RPC_BACKOFF_BASE_MS       = 1000;
+const RPC_BACKOFF_CAP_MS        = 30 * 1000;
 
 // --- ABIs ---
 // Used by viem.watchContractEvent / decodeEventLog (object form).
@@ -216,7 +222,9 @@ async function processTransfer({ tokenId, recipient, key, blockNumber, txHash })
 
   // Idempotency guard: if a previous attempt already transferred (or someone else
   // moved the token), ownerOf will not return our address and we abort cleanly.
-  const owner = await ethNft.ownerOf(tokenId);
+  // Because tokenIds are unique, this also makes double-spend structurally
+  // impossible across reconnects, retries, and backfills.
+  const owner = await withRetry(`ownerOf(${tokenId})`, () => ethNft.ownerOf(tokenId));
   if (owner.toLowerCase() !== ethWallet.address.toLowerCase()) {
     console.warn(`[transfer] skip: tokenId=${tokenId} owned by ${owner}, not us`);
     markProcessed(key, {
@@ -230,7 +238,7 @@ async function processTransfer({ tokenId, recipient, key, blockNumber, txHash })
   }
 
   // Build fee overrides — bump 50% so we land in a block reliably.
-  const feeData = await ethProvider.getFeeData();
+  const feeData = await withRetry('getFeeData', () => ethProvider.getFeeData());
   const overrides = {};
   if (feeData.maxFeePerGas != null && feeData.maxPriorityFeePerGas != null) {
     overrides.maxPriorityFeePerGas =
@@ -249,8 +257,9 @@ async function processTransfer({ tokenId, recipient, key, blockNumber, txHash })
   }
 
   // Gas limit with 50% buffer.
-  const gasEstimate = await ethNft.transferFrom.estimateGas(
-    ethWallet.address, recipient, tokenId
+  const gasEstimate = await withRetry(
+    `estimateGas transferFrom(${tokenId})`,
+    () => ethNft.transferFrom.estimateGas(ethWallet.address, recipient, tokenId)
   );
   overrides.gasLimit = (gasEstimate * GAS_LIMIT_BUFFER_NUM) / GAS_LIMIT_BUFFER_DEN;
   console.log(`[transfer] gasLimit=${overrides.gasLimit} (estimated ${gasEstimate})`);
@@ -292,6 +301,52 @@ function waitWithTimeout(promise, ms, label) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Crude retry for read-side RPC calls. Identifies common transient failures
+// (429s, timeouts, ECONNRESET, etc.) and backs off exponentially. We do NOT
+// use this for sendTransaction — that path is handled by the queue's own
+// retry policy and the ownerOf idempotency check.
+function isTransientRpcError(err) {
+  if (!err) return false;
+  const code = err.code ?? err.error?.code;
+  if (code === 429 || code === -32005) return true; // rate-limited
+  if (code === 'TIMEOUT' || code === 'NETWORK_ERROR' || code === 'SERVER_ERROR') return true;
+  if (code === 'ECONNRESET' || code === 'ECONNREFUSED' || code === 'ETIMEDOUT') return true;
+  const msg = (err.shortMessage || err.message || '').toLowerCase();
+  return (
+    msg.includes('rate') ||
+    msg.includes('429') ||
+    msg.includes('timeout') ||
+    msg.includes('econnreset') ||
+    msg.includes('socket hang up') ||
+    msg.includes('failed to fetch') ||
+    msg.includes('bad gateway') ||
+    msg.includes('service unavailable')
+  );
+}
+
+async function withRetry(label, fn) {
+  let attempt = 0;
+  while (true) {
+    attempt++;
+    try {
+      return await fn();
+    } catch (e) {
+      const transient = isTransientRpcError(e);
+      const msg = e.shortMessage || e.message || String(e);
+      if (!transient || attempt >= RPC_MAX_ATTEMPTS) {
+        throw e;
+      }
+      const delay = Math.min(RPC_BACKOFF_CAP_MS, RPC_BACKOFF_BASE_MS * 2 ** (attempt - 1));
+      console.warn(`[rpc] ${label} transient failure (attempt ${attempt}/${RPC_MAX_ATTEMPTS}): ${msg} — retrying in ${delay}ms`);
+      await sleep(delay);
+    }
+  }
+}
+
 // --- INGEST ---
 function handleLog(log) {
   try {
@@ -318,7 +373,7 @@ function handleLog(log) {
 
 async function backfill(label = 'startup') {
   try {
-    const head = await apechainClient.getBlockNumber();
+    const head = await withRetry('apechain.getBlockNumber', () => apechainClient.getBlockNumber());
 
     let from;
     if (state.lastSeenBlock != null) {
@@ -344,12 +399,15 @@ async function backfill(label = 'startup') {
       const end = (cursor + BACKFILL_CHUNK_BLOCKS - 1n) > head
         ? head
         : (cursor + BACKFILL_CHUNK_BLOCKS - 1n);
-      const logs = await apechainClient.getLogs({
-        address: APECHAIN_NFT_ADDRESS,
-        event: REDEEMED_EVENT,
-        fromBlock: cursor,
-        toBlock: end,
-      });
+      const logs = await withRetry(
+        `apechain.getLogs[${cursor}..${end}]`,
+        () => apechainClient.getLogs({
+          address: APECHAIN_NFT_ADDRESS,
+          event: REDEEMED_EVENT,
+          fromBlock: cursor,
+          toBlock: end,
+        })
+      );
       for (const log of logs) {
         handleLog(log);
         found++;
@@ -369,20 +427,37 @@ async function main() {
 
   // Sanity: make sure ETH RPC actually points at mainnet — wrong-network config
   // is the easiest way to fat-finger this kind of bridge worker.
-  const ethNet = await ethProvider.getNetwork();
+  const ethNet = await withRetry('eth.getNetwork', () => ethProvider.getNetwork());
   if (ethNet.chainId !== ETH_MAINNET_CHAIN_ID) {
     throw new Error(
       `ETH_RPC_URL is on chainId=${ethNet.chainId}, expected ${ETH_MAINNET_CHAIN_ID} (mainnet)`
     );
   }
 
-  const ethBalance = await ethProvider.getBalance(ethWallet.address);
-  console.log(`👤 ETH wallet ${ethWallet.address} balance ${ethers.formatEther(ethBalance)} ETH`);
-  if (ethBalance < LOW_BALANCE_THRESHOLD) {
-    console.warn('⚠️  ETH balance is low. Top up before transfers will go out.');
+  // Balance check is informational — never fatal. A flaky/throttled RPC at boot
+  // shouldn't take the bot offline; an actual "insufficient funds" will surface
+  // at transfer time and be handled by the queue's retry policy.
+  try {
+    const ethBalance = await withRetry(
+      'eth.getBalance',
+      () => ethProvider.getBalance(ethWallet.address)
+    );
+    console.log(`👤 ETH wallet ${ethWallet.address} balance ${ethers.formatEther(ethBalance)} ETH`);
+    if (ethBalance < LOW_BALANCE_THRESHOLD) {
+      console.warn('⚠️  ETH balance is low. Top up before transfers will go out.');
+    }
+  } catch (e) {
+    console.warn(
+      `⚠️  Could not read ETH balance for ${ethWallet.address} ` +
+      `(${e.shortMessage || e.message || e}). Continuing — if your RPC is ` +
+      `rate-limiting on boot, switch to a dedicated endpoint (Alchemy/Infura/Quicknode).`
+    );
   }
 
-  const apechainHead = await apechainClient.getBlockNumber();
+  const apechainHead = await withRetry(
+    'apechain.getBlockNumber',
+    () => apechainClient.getBlockNumber()
+  );
   console.log(`🦍 ApeChain head: block ${apechainHead}`);
 
   await backfill('startup');
