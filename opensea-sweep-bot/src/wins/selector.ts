@@ -1,16 +1,16 @@
 import {
   WINS_MIN_MULTIPLIER,
   WINS_MIN_MULTIPLIER_PAYOUT,
-  WINS_MIN_PROFIT_MULTIPLIER,
-  WINS_MIN_PROFIT_NATIVE,
+  WINS_MIN_PAYOUT_MULTIPLIER,
+  WINS_MIN_PAYOUT_NATIVE,
 } from '../config';
 import type { WinEvent } from './types';
 
 export interface BigWinCriteria {
-  /** Path A: profit floor (e.g. 25,000 APE). */
-  minProfitNative: number;
+  /** Path A: payout floor (e.g. 25,000 APE gross). */
+  minPayoutNative: number;
   /** Path A: minimum multiplier guard (e.g. 2x). null multiplier (free bet) bypasses this. */
-  minProfitMultiplier: number;
+  minPayoutMultiplier: number;
   /** Path B: multiplier floor (e.g. 50x). */
   minMultiplier: number;
   /** Path B: payout floor (e.g. 1,000 APE) — keeps tiny-bet flukes out. */
@@ -18,20 +18,28 @@ export interface BigWinCriteria {
 }
 
 export const DEFAULT_BIG_WIN_CRITERIA: BigWinCriteria = {
-  minProfitNative: WINS_MIN_PROFIT_NATIVE,
-  minProfitMultiplier: WINS_MIN_PROFIT_MULTIPLIER,
+  minPayoutNative: WINS_MIN_PAYOUT_NATIVE,
+  minPayoutMultiplier: WINS_MIN_PAYOUT_MULTIPLIER,
   minMultiplier: WINS_MIN_MULTIPLIER,
   minMultiplierPayout: WINS_MIN_MULTIPLIER_PAYOUT,
 };
 
 export function isBigWin(
   event: WinEvent,
-  criteria: BigWinCriteria = DEFAULT_BIG_WIN_CRITERIA,
+  criteria?: BigWinCriteria,
 ): boolean {
-  // Path A: large absolute profit, gated on meaningful multiplier.
+  // Guard: if called via `arr.filter(isBigWin)`, JS passes (element, index, array)
+  // and `index` (a number) would shadow the default. Fall back to defaults unless
+  // we actually got a criteria object.
+  const c =
+    criteria && typeof criteria === 'object'
+      ? criteria
+      : DEFAULT_BIG_WIN_CRITERIA;
+
+  // Path A: large absolute payout, gated on meaningful multiplier.
   // A free bet (multiplier === null) bypasses the multiplier guard since "infinite x" trivially passes any threshold.
-  if (event.profitNative >= criteria.minProfitNative) {
-    if (event.multiplier === null || event.multiplier >= criteria.minProfitMultiplier) {
+  if (event.payoutNative >= c.minPayoutNative) {
+    if (event.multiplier === null || event.multiplier >= c.minPayoutMultiplier) {
       return true;
     }
   }
@@ -39,8 +47,8 @@ export function isBigWin(
   // Path B: large multiplier, gated on non-trivial payout.
   if (
     event.multiplier !== null &&
-    event.multiplier >= criteria.minMultiplier &&
-    event.payoutNative >= criteria.minMultiplierPayout
+    event.multiplier >= c.minMultiplier &&
+    event.payoutNative >= c.minMultiplierPayout
   ) {
     return true;
   }

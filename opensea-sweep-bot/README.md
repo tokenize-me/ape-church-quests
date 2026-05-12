@@ -55,12 +55,50 @@ pm2 restart opensea-sweep-bot
 
 ```bash
 sqlite3 opensea-sweep-bot/data/sweeps.db
-sqlite> .tables
+
+# OpenSea sweeps
 sqlite> SELECT chain, tx_hash, nft_count, total_cost_native, currency, datetime(published_at, 'unixepoch')
         FROM published_sweeps
         ORDER BY published_at DESC
         LIMIT 20;
+
+# Big wins
+sqlite> SELECT event_id, user_address, game_address, payout_native, multiplier, datetime(published_at, 'unixepoch')
+        FROM published_wins
+        ORDER BY published_at DESC
+        LIMIT 20;
 ```
+
+### Big-wins broadcaster diagnostics
+
+The wins broadcaster runs inside the same PM2 app. It logs nothing on a normal "no qualifying wins" poll by design, so silence ≠ broken.
+
+```bash
+# Live tail with wins-specific lines only
+pm2 logs opensea-sweep-bot | grep wins
+
+# Past 200 lines
+pm2 logs opensea-sweep-bot --lines 200 | grep wins
+```
+
+Key log patterns:
+- `[wins] broadcaster started, polling every 60000ms; floor=...` — startup proof-of-life
+- `[wins] heartbeat polls=10 rows=N qualifying=N errors=N` — one line every ~10 minutes; confirms poller is alive even on quiet days
+- `[wins] found N big win(s) to publish out of M polled` — qualifying wins detected
+- `[wins] published tweetId=... text="BIG WIN ALERT!..."` — tweet went out
+- `[wins] poll failed ...` or `[wins] publish failed, not retrying` — errors
+
+### Previewing what wins WOULD post (no posting, no DB writes)
+
+To sanity-check thresholds against real Supabase data:
+
+```bash
+cd opensea-sweep-bot
+node scripts/wins-preview.js          # last 24 hours
+node scripts/wins-preview.js 72       # last 72 hours
+```
+
+The script prints every event that would qualify under the current thresholds along with the would-be tweet text. Useful for tuning `WINS_MIN_PROFIT_NATIVE` / `WINS_MIN_MULTIPLIER` etc. without restarting the bot.
 
 ### Running modes (set via shared `.env`)
 

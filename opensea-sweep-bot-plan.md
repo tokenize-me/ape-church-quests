@@ -208,7 +208,7 @@ Second use case added: post the platform's biggest wins to the same X account, p
 - [x] Single project (shares publisher, DB, X creds, PM2 process). New `src/wins/` directory alongside existing sweep code; no rename of existing modules
 - [x] Supabase polling every 60s (vs. contract subscription) — meets "doesn't need to be instant" requirement, leverages existing ingestion
 - [x] Two-path criteria (whichever fires first):
-  - **Path A (absolute)**: profit ≥ **25,000 APE** AND multiplier ≥ **2x** (excludes "huge bet won by a hair"). Free-bet (multiplier=null) bypasses the 2x guard
+  - **Path A (absolute)**: **payout** ≥ **25,000 APE** AND multiplier ≥ **2x** (excludes "huge bet won by a hair"). Free-bet (multiplier=null) bypasses the 2x guard. *(payout, not profit — someone who walks away with 25k+ should post even if they bet 10k to get there)*
   - **Path B (multiplier)**: multiplier ≥ **50x** AND payout ≥ **1,000 APE** (excludes "tiny bet hit fluke multi")
 - [x] Tweet copy prefixed with `"BIG WIN ALERT!\n"` — avoids X treating the tweet as a reply when `{playerDisplay}` is an `@handle`
 - [x] Display priority: `users.x_handle` (tagged with `@`) → `users.username` → truncated address `0xabcd…fe40`

@@ -1,7 +1,24 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { WebSocket } from 'ws';
-import { WINS_DECIMALS, WINS_POLL_BATCH_SIZE } from '../config';
+import {
+  WINS_DECIMALS,
+  WINS_MIN_MULTIPLIER_PAYOUT,
+  WINS_MIN_PAYOUT_NATIVE,
+  WINS_POLL_BATCH_SIZE,
+} from '../config';
 import type { WinEvent } from './types';
+
+// Pre-filter applied to Supabase queries: any candidate that *could* qualify
+// under EITHER path must have payout >= the lower of the two payout floors.
+// Eliminates ~99% of plays at the DB level so the bot's 200-row poll budget
+// has months of headroom even at 50k+ plays/day.
+const MIN_CANDIDATE_PAYOUT_NATIVE = Math.min(
+  WINS_MIN_PAYOUT_NATIVE,
+  WINS_MIN_MULTIPLIER_PAYOUT,
+);
+export const MIN_CANDIDATE_PAYOUT_WEI = (
+  BigInt(MIN_CANDIDATE_PAYOUT_NATIVE) * BigInt(10) ** BigInt(WINS_DECIMALS)
+).toString();
 
 interface GameRow {
   event_id: string;
@@ -36,6 +53,7 @@ export async function fetchRecentWins(
   const { data: games, error: gameErr } = await supabase
     .from('game_ended_events')
     .select('event_id, game_address, user_address, buy_in_wei, payout_wei, profit_wei, block_timestamp')
+    .gte('payout_wei', MIN_CANDIDATE_PAYOUT_WEI)
     .order('block_timestamp', { ascending: false })
     .limit(limit);
 

@@ -4,7 +4,11 @@ import { fetchRecentWins } from './source';
 import { isBigWin } from './selector';
 import { buildWinTweet } from './formatter';
 import { isWinPublished, recordPublishedWin } from '../storage/queries';
-import { DRY_RUN, WINS_POLL_INTERVAL_MS } from '../config';
+import {
+  DRY_RUN,
+  WINS_HEARTBEAT_EVERY_POLLS,
+  WINS_POLL_INTERVAL_MS,
+} from '../config';
 import type { WinEvent } from './types';
 
 export interface WinsBroadcasterOptions {
@@ -13,10 +17,22 @@ export interface WinsBroadcasterOptions {
   pollIntervalMs?: number;
 }
 
+interface PollStats {
+  polled: number;
+  qualifying: number;
+  errors: number;
+}
+
+function makePollStats(): PollStats {
+  return { polled: 0, qualifying: 0, errors: 0 };
+}
+
 export class WinsBroadcaster {
   private timer: NodeJS.Timeout | null = null;
   private polling = false;
   private readonly floorTimestamp: number;
+  private pollsSinceHeartbeat = 0;
+  private heartbeatStats = makePollStats();
 
   constructor(private readonly opts: WinsBroadcasterOptions) {
     // Only events whose block_timestamp is at-or-after process startup are considered.
@@ -50,29 +66,42 @@ export class WinsBroadcaster {
     this.polling = true;
     try {
       const wins = await fetchRecentWins(this.opts.supabase);
+      this.heartbeatStats.polled += wins.length;
       const bigUnposted = wins.filter(
         (w) =>
           w.blockTimestamp >= this.floorTimestamp &&
           isBigWin(w) &&
           !isWinPublished(w.eventId),
       );
-      if (bigUnposted.length === 0) return;
-
-      console.log(
-        `[wins] found ${bigUnposted.length} big win(s) to publish out of ${wins.length} polled`,
-      );
-
-      // Publish oldest first so timeline order matches chronological order.
-      bigUnposted.sort((a, b) => a.blockTimestamp - b.blockTimestamp);
-
-      for (const win of bigUnposted) {
-        await this.publishWin(win);
+      this.heartbeatStats.qualifying += bigUnposted.length;
+      if (bigUnposted.length > 0) {
+        console.log(
+          `[wins] found ${bigUnposted.length} big win(s) to publish out of ${wins.length} polled`,
+        );
+        // Publish oldest first so timeline order matches chronological order.
+        bigUnposted.sort((a, b) => a.blockTimestamp - b.blockTimestamp);
+        for (const win of bigUnposted) {
+          await this.publishWin(win);
+        }
       }
     } catch (err) {
+      this.heartbeatStats.errors++;
       console.error('[wins] poll failed', err);
     } finally {
       this.polling = false;
+      this.maybeLogHeartbeat();
     }
+  }
+
+  private maybeLogHeartbeat(): void {
+    this.pollsSinceHeartbeat++;
+    if (this.pollsSinceHeartbeat < WINS_HEARTBEAT_EVERY_POLLS) return;
+    const { polled, qualifying, errors } = this.heartbeatStats;
+    console.log(
+      `[wins] heartbeat polls=${this.pollsSinceHeartbeat} rows=${polled} qualifying=${qualifying} errors=${errors}`,
+    );
+    this.pollsSinceHeartbeat = 0;
+    this.heartbeatStats = makePollStats();
   }
 
   private async publishWin(win: WinEvent): Promise<void> {

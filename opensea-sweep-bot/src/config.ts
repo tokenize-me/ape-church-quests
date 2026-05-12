@@ -62,21 +62,23 @@ export const STREAM_LOG_ONLY = process.env.STREAM_LOG_ONLY === 'true';
 
 export const WINS_POLL_INTERVAL_MS = 60_000;
 export const WINS_POLL_BATCH_SIZE = 200;
+export const WINS_HEARTBEAT_EVERY_POLLS = 10; // ≈ one heartbeat line per 10 minutes
 
 // A win is "big" if EITHER path qualifies (OR — whichever fires first):
 //
-//   Path A (absolute):    profit >= WINS_MIN_PROFIT_NATIVE
-//                         AND multiplier >= WINS_MIN_PROFIT_MULTIPLIER
+//   Path A (absolute):    payout >= WINS_MIN_PAYOUT_NATIVE
+//                         AND multiplier >= WINS_MIN_PAYOUT_MULTIPLIER
 //                         (free-bet exception: null multiplier passes path A on absolute alone)
 //
 //   Path B (multiplier):  multiplier >= WINS_MIN_MULTIPLIER
 //                         AND payout   >= WINS_MIN_MULTIPLIER_PAYOUT
 //
-// Path A's multiplier guard excludes "huge bet won by a hair" wins.
+// Path A's multiplier guard excludes "huge bet won by a hair" wins
+// (e.g. bet 24,500 APE, won 25,000 APE → only 1.02x → doesn't qualify).
 // Path B's payout guard excludes "tiny bet hit a fluke multi" wins.
 // All amounts in native units (APE).
-export const WINS_MIN_PROFIT_NATIVE = 25_000;      // path A: 25,000 APE net profit
-export const WINS_MIN_PROFIT_MULTIPLIER = 2;        // path A: must be at least a 2x win
+export const WINS_MIN_PAYOUT_NATIVE = 25_000;       // path A: 25,000 APE gross payout
+export const WINS_MIN_PAYOUT_MULTIPLIER = 2;        // path A: must be at least a 2x win
 export const WINS_MIN_MULTIPLIER = 50;              // path B: 50x payout/buyIn
 export const WINS_MIN_MULTIPLIER_PAYOUT = 1_000;    // path B: payout must be at least 1,000 APE
 

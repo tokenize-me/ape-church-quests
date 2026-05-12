@@ -21,20 +21,21 @@ function win(overrides: Partial<WinEvent> = {}): WinEvent {
 
 describe('isBigWin', () => {
   const criteria = {
-    minProfitNative: 1000,
-    minProfitMultiplier: 2,
+    minPayoutNative: 1000,
+    minPayoutMultiplier: 2,
     minMultiplier: 25,
     minMultiplierPayout: 500,
   };
 
-  // Path A: profit floor + multiplier guard
-  it('path A fires when profit >= floor AND multiplier >= 2', () => {
+  // Path A: payout floor + multiplier guard
+  it('path A fires when payout >= floor AND multiplier >= 2', () => {
     expect(
       isBigWin(win({ buyInNative: 500, payoutNative: 1500, profitNative: 1000, multiplier: 3 }), criteria),
     ).toBe(true);
   });
 
-  it('path A does NOT fire when profit >= floor but multiplier < 2', () => {
+  it('path A does NOT fire when payout >= floor but multiplier < 2', () => {
+    // bet 50,000 and won 51,500 — 51,500 payout exceeds floor but only 1.03x → excluded
     expect(
       isBigWin(
         win({ buyInNative: 50_000, payoutNative: 51_500, profitNative: 1_500, multiplier: 1.03 }),
@@ -43,13 +44,13 @@ describe('isBigWin', () => {
     ).toBe(false);
   });
 
-  it('path A allows a free bet (multiplier=null) when profit floor is met', () => {
+  it('path A allows a free bet (multiplier=null) when payout floor is met', () => {
     expect(
       isBigWin(win({ buyInNative: 0, payoutNative: 2000, profitNative: 2000, multiplier: null }), criteria),
     ).toBe(true);
   });
 
-  it('path A rejects a free bet when profit below floor', () => {
+  it('path A rejects a free bet when payout below floor', () => {
     expect(
       isBigWin(win({ buyInNative: 0, payoutNative: 500, profitNative: 500, multiplier: null }), criteria),
     ).toBe(false);
@@ -81,15 +82,29 @@ describe('isBigWin', () => {
     ).toBe(false);
   });
 
-  // Defaults from config: profit>=25k AND mult>=2  OR  mult>=50 AND payout>=1000
+  // Regression for a "passed directly to .filter()" footgun:
+  // .filter invokes the callback with (element, index, array). If isBigWin's
+  // optional `criteria` parameter accepts a number from `index`, comparisons
+  // against criteria.minPayoutNative (undefined) all return false.
+  it('survives being passed directly to Array.prototype.filter', () => {
+    const events = [
+      win({ buyInNative: 50, payoutNative: 5_000, profitNative: 4_950, multiplier: 100 }),
+      win({ buyInNative: 10_000, payoutNative: 30_000, profitNative: 20_000, multiplier: 3 }),
+      win({ buyInNative: 50, payoutNative: 100, profitNative: 50, multiplier: 2 }),
+    ];
+    const filtered = events.filter(isBigWin);
+    expect(filtered).toHaveLength(2);
+  });
+
+  // Defaults from config: payout>=25k AND mult>=2  OR  mult>=50 AND payout>=1000
   it('uses defaults from config when no criteria passed', () => {
-    // path A: 30k profit on a 3x — qualifies
+    // path A: bet 10k, won 30k (3x) — payout 30k >= 25k, mult 3 >= 2 → qualifies
     expect(
-      isBigWin(win({ buyInNative: 15_000, payoutNative: 45_000, profitNative: 30_000, multiplier: 3 })),
+      isBigWin(win({ buyInNative: 10_000, payoutNative: 30_000, profitNative: 20_000, multiplier: 3 })),
     ).toBe(true);
-    // path A fails: 30k profit but only 1.1x (huge boring bet)
+    // path A fails: bet 24k, won 25k (1.04x) — payout >= 25k but only 1.04x
     expect(
-      isBigWin(win({ buyInNative: 300_000, payoutNative: 330_000, profitNative: 30_000, multiplier: 1.1 })),
+      isBigWin(win({ buyInNative: 24_000, payoutNative: 25_000, profitNative: 1_000, multiplier: 1.04 })),
     ).toBe(false);
     // path B: 60x mult on a 50 APE bet → 3000 payout, qualifies
     expect(
