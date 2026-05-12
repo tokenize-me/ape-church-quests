@@ -19,10 +19,15 @@ const CONTRACT_ABI = [{"inputs":[{"internalType":"address","name":"userInfoTrack
 
 // --- Constants ---
 const POLLING_INTERVAL = 10000; // 10 seconds
+// Per-user reward sanity cap. GP has 0 decimals so this is a raw token count.
 const MAX_AMOUNT = BigInt(20000);
+// When the signer's GP balance drops below this we emit a loud warning so
+// operators know to top the wallet off before users start getting skipped.
+const LOW_BALANCE_WARNING = BigInt(100000);
 
 // --- In-Memory Retry Queue ---
-// A Set to store user addresses for whom the on-chain tx succeeded but DB update failed.
+// Stores (userAddress, questId) pairs whose on-chain transfer succeeded but
+// whose Supabase row update failed. We retry these at the top of every cycle.
 const dbUpdateRetryQueue = new Map();
 
 // --- Validation ---
@@ -38,7 +43,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
  * The main function that initializes clients and starts the bot.
  */
 async function main() {
-    console.log("🚀 Starting Supabase Verification Bonus Bot...");
+    console.log("🚀 Starting Supabase Verification Bonus Bot (Transfer Mode)...");
 
     const provider = new ethers.JsonRpcProvider(APECHAIN_RPC_URL);
     console.log("✅ Connected to Ape Chain RPC.");
@@ -50,14 +55,16 @@ async function main() {
     console.log(`📄 Contract loaded at address: ${EXP_MANAGER_CONTRACT_ADDRESS}`);
 
     console.log(`🔍 Starting database polling every ${POLLING_INTERVAL / 1000} seconds...`);
-    pollDatabaseAndProcessUsers(contract);
+    pollDatabaseAndProcessUsers(contract, wallet);
 }
 
 /**
- * Polls the database for eligible users and processes them in batches.
- * @param {ethers.Contract} contract - The ethers contract instance.
+ * Polls the database for eligible users and pays their rewards by transferring
+ * GP from the signer wallet (no longer minting).
+ * @param {ethers.Contract} contract - The ethers contract instance bound to the signer.
+ * @param {ethers.Wallet} wallet - The signer wallet, used to read its own GP balance.
  */
-async function pollDatabaseAndProcessUsers(contract) {
+async function pollDatabaseAndProcessUsers(contract, wallet) {
     console.log("\n-------------------------------------");
     console.log(`[${new Date().toISOString()}] Polling for eligible users...`);
 
@@ -83,6 +90,37 @@ async function pollDatabaseAndProcessUsers(contract) {
             }
         }
 
+        // 2. Read signer's current GP balance. We track this locally as we
+        // transfer so we can skip users we can't afford without a balanceOf
+        // call per user.
+        let signerGPBalance;
+        try {
+            signerGPBalance = await contract.balanceOf(wallet.address);
+        } catch (err) {
+            console.error(`🚨 Failed to read signer GP balance: ${err.message}. Skipping cycle.`);
+            scheduleNextPoll(contract, wallet);
+            return;
+        }
+
+        console.log(`💰 Signer GP balance: ${signerGPBalance.toString()} GP`);
+
+        if (signerGPBalance === BigInt(0)) {
+            console.warn(
+                `⚠️  Signer ${wallet.address} has 0 GP. Top off the wallet to resume payouts. ` +
+                `Eligible users will be retried automatically next cycle.`
+            );
+            scheduleNextPoll(contract, wallet);
+            return;
+        }
+
+        if (signerGPBalance < LOW_BALANCE_WARNING) {
+            console.warn(
+                `⚠️  Signer GP balance (${signerGPBalance}) is below low-balance threshold ` +
+                `(${LOW_BALANCE_WARNING}). Top off ${wallet.address} soon to avoid skipping rewards.`
+            );
+        }
+
+        // 3. Fetch active quests + eligible users.
         const { data: quests, error: questsError } = await supabase
             .from("x_interaction_quests")
             .select("id, reward")
@@ -110,159 +148,158 @@ async function pollDatabaseAndProcessUsers(contract) {
 
         if (newUsers.length === 0) {
             console.log("✅ No new users to process.");
-        } else {
-            console.log(`✨ Found ${newUsers.length} total new user(s) to process.`);
+            scheduleNextPoll(contract, wallet);
+            return;
+        }
 
-            // 4. Group into batches and process
-            const TX_BATCH_SIZE = 25;
-            let currentBatchUsers = [];
-            let currentBatchAmounts = [];
-            let currentBatchMeta = [];
+        console.log(`✨ Found ${newUsers.length} total new user(s) to process.`);
 
-            for (const user of newUsers) {
-                const amountReward = quests.find(quest => quest.id === user.quest_id)?.reward ?? 0;
-                if (amountReward === 0) {
-                    console.log(`   - Skipping user: ${user.user_address} - Quest: ${user.quest_id}, Reward: ${amountGP} -> No reward to grant.`);
-                    continue;
-                }
+        // 4. Process users one-by-one, tracking the local running balance.
+        // Continuing past insufficient-balance entries lets smaller rewards
+        // still get paid out of what's left.
+        let remainingBalance = signerGPBalance;
+        let granted = 0;
+        let skippedInsufficient = 0;
+        let skippedZeroReward = 0;
+        let skippedTooHigh = 0;
+        let txFailed = 0;
 
-                currentBatchUsers.push(user.user_address);
-                currentBatchAmounts.push(BigInt(amountReward));
-                currentBatchMeta.push(user);
+        for (const user of newUsers) {
+            const rewardRaw = quests.find(quest => quest.id === user.quest_id)?.reward ?? 0;
+            const reward = BigInt(rewardRaw);
 
-                if (currentBatchUsers.length >= TX_BATCH_SIZE) {
-                    await processBatch(contract, currentBatchUsers, currentBatchAmounts, currentBatchMeta);
-                    currentBatchUsers = [];
-                    currentBatchAmounts = [];
-                    currentBatchMeta = [];
-                }
+            if (reward === BigInt(0)) {
+                console.log(`   - ⏭️  Skipping ${user.user_address} (quest ${user.quest_id}): reward is 0.`);
+                skippedZeroReward++;
+                continue;
             }
 
-            // Process remaining
-            if (currentBatchUsers.length > 0) {
-                await processBatch(contract, currentBatchUsers, currentBatchAmounts, currentBatchMeta);
-                currentBatchUsers = [];
-                currentBatchAmounts = [];
-                currentBatchMeta = [];
+            if (reward > MAX_AMOUNT) {
+                console.warn(
+                    `   - ⏭️  Skipping ${user.user_address} (quest ${user.quest_id}): ` +
+                    `reward ${reward} exceeds MAX_AMOUNT ${MAX_AMOUNT}.`
+                );
+                skippedTooHigh++;
+                continue;
+            }
+
+            if (reward > remainingBalance) {
+                console.warn(
+                    `   - ⏭️  Skipping ${user.user_address} (quest ${user.quest_id}): ` +
+                    `reward ${reward} GP > remaining signer balance ${remainingBalance} GP. ` +
+                    `Will retry next cycle.`
+                );
+                skippedInsufficient++;
+                continue;
+            }
+
+            const txOk = await executeTransfer(contract, user.user_address, reward);
+
+            if (!txOk) {
+                txFailed++;
+                continue;
+            }
+
+            // Tx succeeded — decrement local balance before any DB work.
+            remainingBalance -= reward;
+            granted++;
+
+            const { error: updateError } = await supabase
+                .from('user_x_interaction_quests')
+                .update({ received_verification_bonus: true })
+                .eq('user_address', user.user_address)
+                .eq('quest_id', user.quest_id);
+
+            if (updateError) {
+                console.error(
+                    `🚨 CRITICAL: DB update failed for ${user.user_address} (Quest ${user.quest_id}) ` +
+                    `after successful transfer. Adding to retry queue.`
+                );
+                const queueKey = `${user.user_address}:${user.quest_id}`;
+                dbUpdateRetryQueue.set(queueKey, {
+                    userAddress: user.user_address,
+                    questId: user.quest_id,
+                });
+            } else {
+                console.log(
+                    `🎉 Transferred ${reward} GP → ${user.user_address} (quest ${user.quest_id}).`
+                );
             }
         }
+
+        console.log(
+            `📊 Cycle summary: granted=${granted}, txFailed=${txFailed}, ` +
+            `skippedInsufficient=${skippedInsufficient}, skippedZeroReward=${skippedZeroReward}, ` +
+            `skippedTooHigh=${skippedTooHigh}, remainingBalance=${remainingBalance} GP`
+        );
 
     } catch (error) {
         console.error("An unexpected error occurred during the polling cycle:", error);
     }
 
-    // Schedule the next poll
-    setTimeout(() => pollDatabaseAndProcessUsers(contract), POLLING_INTERVAL);
+    scheduleNextPoll(contract, wallet);
+}
+
+function scheduleNextPoll(contract, wallet) {
+    setTimeout(() => pollDatabaseAndProcessUsers(contract, wallet), POLLING_INTERVAL);
 }
 
 /**
- * Processes a batch of users: sends transaction and updates DB.
+ * Executes a single ERC20 'transfer' from the signer to the recipient.
+ * @param {ethers.Contract} contract The ethers contract instance bound to the signer.
+ * @param {string} userAddress The recipient address.
+ * @param {bigint} amount The raw GP amount to transfer (GP has 0 decimals).
+ * @returns {Promise<boolean>} True if the transaction was mined successfully.
  */
-async function processBatch(contract, addresses, amounts, metaData) {
-    console.log(`\n🚀 Processing batch of ${addresses.length} users...`);
-    
-    const txSuccess = await executeBatchBonusTransaction(contract, addresses, amounts);
-
-    if (!txSuccess) {
-        console.warn(`❌ Batch transaction failed. Skipping DB updates for this batch.`);
-        return;
-    }
-
-    console.log(`📝 Updating database for ${metaData.length} users...`);
-    
-    // Update DB in parallel
-    const updatePromises = metaData.map(async (user) => {
-        const { error: updateError } = await supabase
-            .from('user_x_interaction_quests')
-            .update({ received_verification_bonus: true })
-            .eq('user_address', user.user_address)
-            .eq('quest_id', user.quest_id);
-
-        if (updateError) {
-             console.error(`🚨 CRITICAL: DB update failed for ${user.user_address} (Quest ${user.quest_id}). Adding to retry queue.`);
-             const queueKey = `${user.user_address}:${user.quest_id}`;
-             dbUpdateRetryQueue.set(queueKey, { 
-                 userAddress: user.user_address, 
-                 questId: user.quest_id 
-             });
-        }
-    });
-
-    await Promise.all(updatePromises);
-    console.log(`✅ Batch processing complete.`);
-}
-
-/**
- * Executes the 'batchGrantBonusEXP' smart contract function.
- * @param {ethers.Contract} contract The ethers contract instance.
- * @param {string[]} users Array of user addresses.
- * @param {BigInt[]} amounts Array of amounts.
- * @returns {Promise<boolean>} True if the transaction was successful, otherwise false.
- */
-async function executeBatchBonusTransaction(contract, users, amounts) {
+async function executeTransfer(contract, userAddress, amount) {
     try {
-
-        // if amounts has a value greater than MAX_AMOUNT, skip the transaction
-        if (amounts.some(amount => amount > MAX_AMOUNT)) {
-            console.log(`   - Amount is too high: ${amounts.find(amount => amount > MAX_AMOUNT)}. Skipping...`);
-            return false;
-        }
-        
-        const totalAmount = amounts.reduce((a, b) => a + b, 0n);
-        console.log(`   - Attempting to grant total ${totalAmount} EXP to ${users.length} users...`);
-
-        const averageAmount = totalAmount / BigInt(users.length);
-        console.log(`   - Average amount: ${averageAmount}`);
-        if (averageAmount > MAX_AMOUNT) {
-            console.log(`   - Average amount is too high: ${averageAmount}. Skipping...`);
-            return false;
-        }
+        console.log(`   - Transferring ${amount} GP → ${userAddress}...`);
 
         const feeData = await contract.runner.provider.getFeeData();
-        /* console.log("   - Current Fee Data:", {
-            maxFeePerGas: ethers.formatUnits(feeData.maxFeePerGas, "gwei"),
-            maxPriorityFeePerGas: ethers.formatUnits(feeData.maxPriorityFeePerGas, "gwei"),
-        }); */
-
         const priorityFee = feeData.maxPriorityFeePerGas + ethers.parseUnits("2", "gwei");
 
-        // Estimate gas
         let gasEstimate;
         try {
-            gasEstimate = await contract.batchGrantBonusEXP.estimateGas(users, amounts);
-            // console.log(`   - Estimated gas: ${gasEstimate}`);
-        } catch (error) {
-             console.warn(`   - Gas estimation failed: ${error.message}. Using fallback.`);
-             // Fallback: ~100k per user + 100k base
-             gasEstimate = BigInt(100000) * BigInt(users.length) + BigInt(100000);
+            gasEstimate = await contract.transfer.estimateGas(userAddress, amount);
+        } catch (err) {
+            // If estimateGas reverts (e.g. on-chain balance shortfall from a
+            // race condition with another spender), bail out of this user
+            // without burning gas.
+            console.warn(
+                `   - Gas estimation failed for ${userAddress}: ${err.shortMessage ?? err.message}. ` +
+                `Skipping this transfer.`
+            );
+            return false;
         }
-        
+
         const gasLimitWithBuffer = (gasEstimate * BigInt(120)) / BigInt(100); // 20% buffer
 
-        // Send the transaction
-        const tx = await contract.batchGrantBonusEXP(users, amounts, {
+        const tx = await contract.transfer(userAddress, amount, {
             gasLimit: gasLimitWithBuffer,
             maxPriorityFeePerGas: priorityFee,
             maxFeePerGas: feeData.maxFeePerGas,
         });
 
-        console.log(`   - Batch Tx Sent: ${tx.hash}. Waiting...`);
+        console.log(`   - Tx sent: ${tx.hash}. Waiting...`);
         const receipt = await tx.wait();
-        console.log(`🎉 Batch Transaction Mined! Block number: ${receipt.blockNumber}`);
+        console.log(`   - 🎉 Tx mined in block ${receipt.blockNumber}.`);
         return true;
 
     } catch (error) {
-        if (error.code === 'CALL_EXCEPTION' || error.reason) {
-            console.warn(`   - Transaction failed. Reason: ${error.reason}`);
-            return false;
-        } else if (error.code === 'INSUFFICIENT_FUNDS') {
-            console.error("   - Transaction failed: Insufficient funds.");
+        if (error.code === 'INSUFFICIENT_FUNDS') {
+            // This is APE-for-gas insufficiency, not GP. Hard-exit so an
+            // operator can refuel — same behavior as before.
+            console.error("   - Transaction failed: signer has insufficient APE for gas.");
             process.exit(1);
-            return false;
-        } else {
-            console.error("   - An unexpected error occurred during transaction execution:", error);
+        }
+        if (error.code === 'CALL_EXCEPTION' || error.reason) {
+            console.warn(
+                `   - Transfer failed. Reason: ${error.reason ?? error.shortMessage ?? 'unknown'}`
+            );
             return false;
         }
+        console.error("   - An unexpected error occurred during transfer execution:", error);
+        return false;
     }
 }
 
