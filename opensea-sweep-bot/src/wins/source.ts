@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { WebSocket } from 'ws';
 import { WINS_DECIMALS, WINS_POLL_BATCH_SIZE } from '../config';
 import type { WinEvent } from './types';
 
@@ -21,6 +22,10 @@ interface UserRow {
 export function makeSupabaseClient(url: string, serviceKey: string): SupabaseClient {
   return createClient(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
+    // supabase-js eagerly constructs a RealtimeClient even when we only use REST.
+    // On Node < 22 (no native WebSocket), pass `ws` as the realtime transport so
+    // construction doesn't throw at startup.
+    realtime: { transport: WebSocket as unknown as never },
   });
 }
 

@@ -30,7 +30,7 @@ const COLLECTIONS = [
 ]
 
 // --- Constants ---
-const POLLING_INTERVAL = 60_000; // 1 minute
+const POLLING_INTERVAL = 30_000; // 30 seconds
 const BATCH_SIZE = 500;
 
 // --- Validation ---
