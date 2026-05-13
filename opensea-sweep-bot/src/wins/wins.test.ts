@@ -96,9 +96,9 @@ describe('isBigWin', () => {
     expect(filtered).toHaveLength(2);
   });
 
-  // Defaults from config: payout>=25k AND mult>=2  OR  mult>=50 AND payout>=1000
+  // Defaults from config: payout>=15k AND mult>=1.8  OR  mult>=25 AND payout>=1000
   it('uses defaults from config when no criteria passed', () => {
-    // path A: bet 10k, won 30k (3x) — payout 30k >= 25k, mult 3 >= 2 → qualifies
+    // path A: bet 10k, won 30k (3x) — payout 30k >= 15k, mult 3 >= 1.8 → qualifies
     expect(
       isBigWin(win({ buyInNative: 10_000, payoutNative: 30_000, profitNative: 20_000, multiplier: 3 })),
     ).toBe(true);

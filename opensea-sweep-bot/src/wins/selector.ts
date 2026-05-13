@@ -7,11 +7,11 @@ import {
 import type { WinEvent } from './types';
 
 export interface BigWinCriteria {
-  /** Path A: payout floor (e.g. 25,000 APE gross). */
+  /** Path A: payout floor (e.g. 15,000 APE gross). */
   minPayoutNative: number;
-  /** Path A: minimum multiplier guard (e.g. 2x). null multiplier (free bet) bypasses this. */
+  /** Path A: minimum multiplier guard (e.g. 1.8x). null multiplier (free bet) bypasses this. */
   minPayoutMultiplier: number;
-  /** Path B: multiplier floor (e.g. 50x). */
+  /** Path B: multiplier floor (e.g. 25x). */
   minMultiplier: number;
   /** Path B: payout floor (e.g. 1,000 APE) — keeps tiny-bet flukes out. */
   minMultiplierPayout: number;
