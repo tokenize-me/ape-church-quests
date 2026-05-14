@@ -78,8 +78,8 @@ export const WINS_HEARTBEAT_EVERY_POLLS = 10; // ≈ one heartbeat line per 10 m
 // Path B's payout guard excludes "tiny bet hit a fluke multi" wins.
 // All amounts in native units (APE).
 export const WINS_MIN_PAYOUT_NATIVE = 15_000;       // path A: 15,000 APE gross payout
-export const WINS_MIN_PAYOUT_MULTIPLIER = 1.8;      // path A: must be at least a 1.8x win
-export const WINS_MIN_MULTIPLIER = 25;              // path B: 25x payout/buyIn
+export const WINS_MIN_PAYOUT_MULTIPLIER = 1.75;     // path A: must be at least a 1.75x win
+export const WINS_MIN_MULTIPLIER = 20;              // path B: 20x payout/buyIn
 export const WINS_MIN_MULTIPLIER_PAYOUT = 1_000;    // path B: payout must be at least 1,000 APE
 
 // Currency of all wins on the platform. Currently APE; widen if/when other chains added.
@@ -119,6 +119,7 @@ export const GAME_NAMES: Record<string, string> = {
   '0x1ac78e6a153deed1b8db67b9813991651d53e3a6': 'Gimboz Of The Galaxy',
   '0x25c170c9c0480b1c8e9e13667fddb87685e50f11': 'ApeChurch Downs',
   '0x4c4bf42d114c9ab912603d5156f030196975d1cd': 'RillAxe',
+  '0x4fe5712e07e64b93dddf6a114d15a9c68f1d6ceb': 'Pop N Drop Plinko',
 };
 
 // Win tweet template. Placeholders: {playerDisplay}, {payout}, {currency}, {gameName}, {buyIn}, {multiplier}
