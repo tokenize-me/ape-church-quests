@@ -102,9 +102,9 @@ export const WINS_HEARTBEAT_EVERY_POLLS = 10; // ≈ one heartbeat line per 10 m
 // (e.g. bet 14,500 APE, won 15,000 APE → only 1.03x → doesn't qualify).
 // Path B's payout guard excludes "tiny bet hit a fluke multi" wins.
 // All amounts in native units (APE).
-export const WINS_MIN_PAYOUT_NATIVE = 15_000;       // path A: 15,000 APE gross payout
-export const WINS_MIN_PAYOUT_MULTIPLIER = 1.75;     // path A: must be at least a 1.75x win
-export const WINS_MIN_MULTIPLIER = 20;              // path B: 20x payout/buyIn
+export const WINS_MIN_PAYOUT_NATIVE = 10_000;       // path A: 10,000 APE gross payout
+export const WINS_MIN_PAYOUT_MULTIPLIER = 1.9;     // path A: must be at least a 1.9x win
+export const WINS_MIN_MULTIPLIER = 10;              // path B: 10x payout/buyIn
 export const WINS_MIN_MULTIPLIER_PAYOUT = 1_000;    // path B: payout must be at least 1,000 APE
 
 // Currency of all wins on the platform. Currently APE; widen if/when other chains added.
