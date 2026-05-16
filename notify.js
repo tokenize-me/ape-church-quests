@@ -29,6 +29,7 @@ const GimbozRouletteAddress      = '0xc799ef866e092dc052872b45a8ea4c39a212b955';
 const MarketplaceAddress         = '0x6af679e13caaf36f088a540e86ed2b18a4de11af';
 const NFTPackAddress             = '0xd275a7f641827305c1e2958b5c93b325c8b8f0da';
 const EXPManagerAddress          = '0x0382338F3876237Ae89317A6a8207C432D430b93';
+const GimbozGreenPill            = '0x1f0c1c11A28d9E1BEb8670Be22bb8Ef8744d5707'.toLowerCase();
 
 const NFT_NAME_MAP = {
   [LootBoxNFTAddress]:          'Loot Box NFT',
@@ -41,6 +42,7 @@ const NFT_NAME_MAP = {
   [GimbozElixirAddress]:        'Gimboz Elixir NFT',
   [GimbozCaskAddress]:          'Gimboz Cask NFT',
   [MIDAS_PENDANT_ADDRESS]:      'Midas Pendant NFT',
+  [GimbozGreenPill]:            'Gimboz Green Pill NFT',
 };
 
 // --- ABI DEFINITIONS ---

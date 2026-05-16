@@ -22,6 +22,7 @@ export const MIN_CANDIDATE_PAYOUT_WEI = (
 
 interface GameRow {
   event_id: string;
+  game_id: string;
   game_address: string;
   user_address: string;
   buy_in_wei: string | number;
@@ -52,7 +53,7 @@ export async function fetchRecentWins(
 ): Promise<WinEvent[]> {
   const { data: games, error: gameErr } = await supabase
     .from('game_ended_events')
-    .select('event_id, game_address, user_address, buy_in_wei, payout_wei, profit_wei, block_timestamp')
+    .select('event_id, game_id, game_address, user_address, buy_in_wei, payout_wei, profit_wei, block_timestamp')
     .gte('payout_wei', MIN_CANDIDATE_PAYOUT_WEI)
     .order('block_timestamp', { ascending: false })
     .limit(limit);
@@ -80,6 +81,7 @@ export async function fetchRecentWins(
     const profitNative = weiToNative(g.profit_wei);
     return {
       eventId: g.event_id,
+      replayId: String(g.game_id),
       gameAddress: g.game_address.toLowerCase(),
       userAddress: g.user_address.toLowerCase(),
       buyInNative,

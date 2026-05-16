@@ -9,6 +9,8 @@ import {
   IMAGE_DOWNLOAD_TIMEOUT_MS,
   QUIET_PERIOD_MS,
   TWITTER_NATIVE_GRID_MAX,
+  WINS_LISTENER_ENABLED,
+  WINS_POLLER_ENABLED,
 } from './config';
 import { StreamClient } from './stream/client';
 import { StreamManager } from './stream/manager';
@@ -21,6 +23,7 @@ import { TwitterPublisher, makeRealTwitterClient } from './publisher/twitter';
 import { isSweepPublished, recordPublishedSweep } from './storage/queries';
 import { getCollectionMetadata } from './opensea/collections';
 import { WinsBroadcaster } from './wins/broadcaster';
+import { WinsListener } from './wins/listener';
 import { makeSupabaseClient } from './wins/source';
 import type { SweepDetected } from './aggregator/types';
 
@@ -131,7 +134,26 @@ async function main(): Promise<void> {
 
   const supabase = makeSupabaseClient(supabaseUrl, supabaseKey);
   const wins = new WinsBroadcaster({ supabase, publisher });
-  wins.start();
+  if (WINS_POLLER_ENABLED) {
+    console.log('[index] wins poller ENABLED');
+    wins.start();
+  } else {
+    console.log('[index] wins poller DISABLED (listener is the source of truth)');
+  }
+
+  let listener: WinsListener | null = null;
+  if (WINS_LISTENER_ENABLED) {
+    const wssUrl = requireEnv('APECHAIN_WSS_URL');
+    listener = new WinsListener({ wssUrl, supabase, broadcaster: wins });
+    try {
+      await listener.start();
+    } catch (err) {
+      console.error('[index] listener.start() failed', err);
+      throw err;
+    }
+  } else {
+    console.log('[index] wins listener DISABLED');
+  }
 
   let shuttingDown = false;
   const shutdown = async (sig: string): Promise<void> => {
@@ -141,6 +163,7 @@ async function main(): Promise<void> {
     manager.stopHeartbeat();
     client.disconnect();
     wins.stop();
+    listener?.stop();
     const drain = buffer.flushAll();
     const timeout = new Promise<void>((resolve) => setTimeout(resolve, 5_000));
     await Promise.race([drain, timeout]);

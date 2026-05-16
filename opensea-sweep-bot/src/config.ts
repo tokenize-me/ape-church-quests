@@ -57,6 +57,30 @@ export const DRY_RUN = process.env.DRY_RUN === 'true';
 export const STREAM_LOG_ONLY = process.env.STREAM_LOG_ONLY === 'true';
 
 // =============================================================================
+// Big-wins listener (WSS) — see notify.js for the reference pattern.
+// =============================================================================
+
+// ApeChain mainnet. Curtis testnet is 33111 — confirm before flipping if we
+// ever stand up a testnet bot.
+export const APECHAIN_CHAIN_ID = 33139;
+
+// Cap on the backfill window after a restart. If lastSeen is more than this
+// many blocks behind head, we skip the gap and start from head. Prevents an
+// unbounded eth_getLogs call after long downtime (which Alchemy would reject
+// anyway around 10k blocks for the free getLogs endpoint).
+export const WINS_BACKFILL_BLOCKS_MAX = 5_000;
+
+// Cursor key for persisted last-seen block in the local sqlite cursors table.
+export const WINS_LAST_SEEN_BLOCK_KEY = 'wins_last_seen_block';
+
+// Feature flags for the cutover. Run both during the soak period, then flip
+// the poller off once the listener has fired cleanly for a few days.
+// Defaults: listener ON, poller OFF — explicit opt-in to the poller during
+// the transition by setting WINS_POLLER_ENABLED=true.
+export const WINS_LISTENER_ENABLED = process.env.WINS_LISTENER_ENABLED !== 'false';
+export const WINS_POLLER_ENABLED = process.env.WINS_POLLER_ENABLED === 'true';
+
+// =============================================================================
 // Big-wins broadcaster (separate use case from sweeps; shares same X account)
 // =============================================================================
 
@@ -85,6 +109,48 @@ export const WINS_MIN_MULTIPLIER_PAYOUT = 1_000;    // path B: payout must be at
 // Currency of all wins on the platform. Currently APE; widen if/when other chains added.
 export const WINS_CURRENCY = 'APE';
 export const WINS_DECIMALS = 18; // wei → native conversion
+
+// Base URL for the Ape Church web app. Used to build replay links appended to
+// big-win tweets. Hard-coded because it doesn't change between environments
+// (the bot is single-environment, prod-only).
+export const APE_CHURCH_BASE_URL = 'https://www.ape.church';
+
+// Map of game contract address (lowercased) → URL slug for the replay page.
+// Tweet URL shape: `${APE_CHURCH_BASE_URL}/games/<slug>?id=<replayId>`.
+// Addresses not in this map post the tweet WITHOUT a replay link (graceful
+// degradation — same policy as GAME_NAMES). Keep keys in sync with GAME_NAMES.
+export const GAME_SLUGS: Record<string, string> = {
+  '0x9ebb4df257b971582baf096b62ca41de7723f3cb': 'dino-dough',
+  '0xb5da735118e848130b92994ee16377db2ae31a4c': 'bubblegum-heist',
+  '0x7b53ec7a5e1c30d4b91d2c3ec0472a6e4818a657': 'sushi-showdown',
+  '0x674bd91adb41897fa780386e610168afbb05e694': 'cosmic-plinko',
+  '0xb08c669dc0419151ba4e4920e80128802db5497b': 'baccarat',
+  '0xa67d5cd51028caaa367eefce90a5ea0b71c6cbe2': 'hilo',
+  '0x1f48a104c1808eb4107f3999999d36aeafec56d5': 'roulette',
+  '0xb02b13adb8eaafe1f41ec942612c4a4862b74d1d': 'geez-diggerz',
+  '0xaf107530b56f86ecd59f03a93fb5044f32e02ae9': 'cult-quest',
+  '0xc936d6691737afe5240975622f0597fa2d122fad': 'keno',
+  '0x0717330c1a9e269a0e034abb101c8d32ac0e9600': 'ape-strong',
+  '0x40ee3295035901e5fd80703774e5a9fe7ce2b90c': 'speed-keno',
+  '0x4f7d016704bc9a1d373e512e10cf86a0e7015d1d': 'gimboz-poker',
+  '0x03ac9d823ccc27df9f0981fd3975ca6f13067ed7': 'blackjack',
+  '0x17e219844f25f3fed6e422ddaffd2e6557ebced3': 'gimboz-smash',
+  '0x59ebd3406b76dcc74102afa2ca5284e9aab6ba28': 'monkey-match',
+  '0x88683b2f9e765e5b1ec2745178354c70a03531ce': 'jungle-plinko',
+  '0x6a48a513a46955d8622c809fce876d2f11142003': 'bear-dice',
+  '0x5b44ce34300d1b8d32b5a6119f192e3eda74e144': 'speed-crash',
+  '0xa59cf828222ecd8ace4b6195764d11f5ea7f62a6': 'blocks',
+  '0xc1acd12aa34dc33979871ef95c540d46a6566b4b': 'primes',
+  '0xc1046a6b4c01512803772b25f72d9f6ff27f94a7': 'ricos-revenge',
+  '0x5e405198b349d6522bbb614e7391bdc4f4f6f681': 'reel-pirates',
+  '0x7c1bead2a3411f1169ed57b2031b0a6a2981809b': 'street-looker',
+  '0x37f050aed673a951937af6161a04e9ff604544b2': 'foxy-shooter',
+  '0x64b27c1c69559a795c98958614398dd7195ae1b8': 'blizzard-blitz',
+  '0x1ac78e6a153deed1b8db67b9813991651d53e3a6': 'gimboz-of-the-galaxy',
+  '0x25c170c9c0480b1c8e9e13667fddb87685e50f11': 'ape-church-downs',
+  '0x4c4bf42d114c9ab912603d5156f030196975d1cd': 'rillaxe',
+  '0x4fe5712e07e64b93dddf6a114d15a9c68f1d6ceb': 'pop-n-drop',
+};
 
 // Map of game contract address (lowercased) → human-readable display name.
 // Keys MUST be lowercase — formatter.ts looks up via address.toLowerCase().
@@ -127,3 +193,9 @@ export const GAME_NAMES: Record<string, string> = {
 // reply when {playerDisplay} starts with "@handle".
 export const WIN_TWEET_TEMPLATE =
   'BIG WIN ALERT!\n{playerDisplay} won {payout} {currency} on {gameName} from a {buyIn} {currency} bet ({multiplier}x).';
+
+// Game contract addresses the WSS listener subscribes to. Derived from GAME_NAMES
+// so adding a game in one place wires it up everywhere (listener, slug lookup,
+// display name). Cast through `0x${string}[]` because viem's `address` type wants
+// the template literal form.
+export const TRACKED_GAME_ADDRESSES = Object.keys(GAME_NAMES) as `0x${string}`[];

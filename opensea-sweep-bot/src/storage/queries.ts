@@ -115,3 +115,23 @@ export function recordPublishedWin(
     Math.floor(Date.now() / 1000),
   );
 }
+
+// --- cursors ---------------------------------------------------------------
+
+const stmtGetCursor = db.prepare<[string], { value: string }>(`
+  SELECT value FROM cursors WHERE key = ?
+`);
+
+const stmtSetCursor = db.prepare<[string, string, number]>(`
+  INSERT INTO cursors (key, value, updated_at) VALUES (?, ?, ?)
+  ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+`);
+
+export function getCursor(key: string): string | null {
+  const row = stmtGetCursor.get(key);
+  return row?.value ?? null;
+}
+
+export function setCursor(key: string, value: string): void {
+  stmtSetCursor.run(key, value, Math.floor(Date.now() / 1000));
+}

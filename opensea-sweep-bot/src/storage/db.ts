@@ -52,6 +52,15 @@ db.exec(`
     tweet_text        TEXT    NOT NULL,
     published_at      INTEGER NOT NULL
   );
+
+  -- Small key/value store. Currently holds 'wins_last_seen_block' so the
+  -- WSS listener can backfill via eth_getLogs after a restart instead of
+  -- losing every event that fired while the bot was down.
+  CREATE TABLE IF NOT EXISTS cursors (
+    key        TEXT PRIMARY KEY,
+    value      TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
 `);
 
 export const DB_FILE = DB_PATH;

@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { isBigWin } from './selector';
-import { buildWinTweet, derivePlayerDisplay, deriveGameName, truncateAddress } from './formatter';
+import { buildWinTweet, derivePlayerDisplay, deriveGameName, deriveReplayUrl, truncateAddress } from './formatter';
 import type { WinEvent } from './types';
 
 function win(overrides: Partial<WinEvent> = {}): WinEvent {
   return {
     eventId: 'evt-1',
+    replayId: '12345',
     gameAddress: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     userAddress: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     buyInNative: 50,
@@ -185,6 +186,56 @@ describe('GAME_NAMES map hygiene', () => {
   });
 });
 
+describe('GAME_SLUGS map hygiene', () => {
+  it('every key is fully lowercase', async () => {
+    const { GAME_SLUGS } = await import('../config');
+    for (const key of Object.keys(GAME_SLUGS)) {
+      expect(key, `GAME_SLUGS key "${key}" must be lowercase`).toBe(
+        key.toLowerCase(),
+      );
+    }
+  });
+
+  it('every slug matches the sanitization rules from pnl-share-bot.md (lowercase, [a-z0-9-], no leading/trailing/double dashes)', async () => {
+    const { GAME_SLUGS } = await import('../config');
+    for (const slug of Object.values(GAME_SLUGS)) {
+      expect(slug, `slug "${slug}" must match ^[a-z0-9]+(-[a-z0-9]+)*$`).toMatch(
+        /^[a-z0-9]+(-[a-z0-9]+)*$/,
+      );
+    }
+  });
+});
+
+describe('deriveReplayUrl', () => {
+  it('builds a URL for a known game address', () => {
+    const url = deriveReplayUrl(
+      win({ gameAddress: '0x1f48a104c1808eb4107f3999999d36aeafec56d5', replayId: '183245' }),
+    );
+    expect(url).toBe('https://www.ape.church/games/roulette?id=183245');
+  });
+
+  it('matches even when the caller passes a checksummed address', () => {
+    const url = deriveReplayUrl(
+      win({ gameAddress: '0x1F48a104C1808eB4107f3999999D36aEAFec56d5', replayId: '1' }),
+    );
+    expect(url).toBe('https://www.ape.church/games/roulette?id=1');
+  });
+
+  it('returns null for an unknown game address', () => {
+    expect(
+      deriveReplayUrl(win({ gameAddress: '0xunknownunknownunknownunknownunknownunknownXX' })),
+    ).toBeNull();
+  });
+
+  it('returns null when replayId is non-numeric', () => {
+    expect(
+      deriveReplayUrl(
+        win({ gameAddress: '0x1f48a104c1808eb4107f3999999d36aeafec56d5', replayId: 'abc' }),
+      ),
+    ).toBeNull();
+  });
+});
+
 describe('buildWinTweet', () => {
   it('prefixes the tweet with "BIG WIN ALERT!" on its own line', () => {
     const text = buildWinTweet(
@@ -243,5 +294,31 @@ describe('buildWinTweet', () => {
     expect(text).toContain('0x0d69…fe40');
     expect(text).toContain('∞');
     expect(text).toContain('0.00 APE');
+  });
+
+  it('appends the replay URL on its own line when game is known', () => {
+    const text = buildWinTweet(
+      win({
+        xHandle: 'apemaster',
+        gameAddress: '0x1f48a104c1808eb4107f3999999d36aeafec56d5',
+        replayId: '183245',
+      }),
+    ).text;
+    const lines = text.split('\n');
+    expect(lines[0]).toBe('BIG WIN ALERT!');
+    expect(lines[lines.length - 1]).toBe(
+      'https://www.ape.church/games/roulette?id=183245',
+    );
+  });
+
+  it('omits the replay URL when game address has no slug mapping', () => {
+    const text = buildWinTweet(
+      win({
+        gameAddress: '0xunknownunknownunknownunknownunknownunknownXX',
+        replayId: '1',
+      }),
+    ).text;
+    expect(text).not.toContain('ape.church/games/');
+    expect(text).not.toContain('https://');
   });
 });

@@ -93,6 +93,16 @@ export class WinsBroadcaster {
     }
   }
 
+  // Public entry point for the WSS listener. Applies the same floor +
+  // dedup + bigWin gating as the poller, then publishes if it qualifies.
+  // Idempotent — safe to call with the same event repeatedly.
+  async handleEvent(win: WinEvent): Promise<void> {
+    if (win.blockTimestamp < this.floorTimestamp) return;
+    if (!isBigWin(win)) return;
+    if (isWinPublished(win.eventId)) return;
+    await this.publishWin(win);
+  }
+
   private maybeLogHeartbeat(): void {
     this.pollsSinceHeartbeat++;
     if (this.pollsSinceHeartbeat < WINS_HEARTBEAT_EVERY_POLLS) return;

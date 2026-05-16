@@ -1,5 +1,7 @@
 import {
+  APE_CHURCH_BASE_URL,
   GAME_NAMES,
+  GAME_SLUGS,
   WIN_TWEET_TEMPLATE,
   WINS_CURRENCY,
 } from '../config';
@@ -13,14 +15,28 @@ export function buildWinTweet(event: WinEvent): { text: string } {
     ? formatMultiplier(event.multiplier)
     : '∞';
 
-  const text = WIN_TWEET_TEMPLATE
+  const base = WIN_TWEET_TEMPLATE
     .replace('{playerDisplay}', playerDisplay)
     .replaceAll('{currency}', WINS_CURRENCY)
     .replace('{payout}', formatNative(event.payoutNative, WINS_CURRENCY))
     .replace('{gameName}', gameName)
     .replace('{buyIn}', formatNative(event.buyInNative, WINS_CURRENCY))
     .replace('{multiplier}', multiplierStr);
+
+  const replayUrl = deriveReplayUrl(event);
+  const text = replayUrl ? `${base}\n${replayUrl}` : base;
   return { text };
+}
+
+// Returns the replay URL for the event, or null if we don't have a slug for
+// this game (graceful: tweet still posts, just without the link). Also returns
+// null if replayId isn't numeric, which should never happen given the source
+// query but is cheap to guard against.
+export function deriveReplayUrl(event: WinEvent): string | null {
+  const slug = GAME_SLUGS[event.gameAddress.toLowerCase()];
+  if (!slug) return null;
+  if (!/^\d+$/.test(event.replayId)) return null;
+  return `${APE_CHURCH_BASE_URL}/games/${slug}?id=${event.replayId}`;
 }
 
 export function derivePlayerDisplay(event: WinEvent): string {
