@@ -73,12 +73,13 @@ export const WINS_BACKFILL_BLOCKS_MAX = 5_000;
 // Cursor key for persisted last-seen block in the local sqlite cursors table.
 export const WINS_LAST_SEEN_BLOCK_KEY = 'wins_last_seen_block';
 
-// Feature flags for the cutover. Run both during the soak period, then flip
-// the poller off once the listener has fired cleanly for a few days.
-// Defaults: listener ON, poller OFF — explicit opt-in to the poller during
-// the transition by setting WINS_POLLER_ENABLED=true.
-export const WINS_LISTENER_ENABLED = process.env.WINS_LISTENER_ENABLED !== 'false';
-export const WINS_POLLER_ENABLED = process.env.WINS_POLLER_ENABLED === 'true';
+// Feature flags. Hard-coded rather than env-driven because they're effectively
+// one-time cutover switches — flip the constant + redeploy if you ever need to
+// run the legacy Supabase poller as a safety net alongside the listener.
+// The two paths share dedup (published_wins PK locally + game_ended_events PK
+// in Supabase), so enabling both is safe — won't double-tweet, won't dup rows.
+export const WINS_LISTENER_ENABLED = true;
+export const WINS_POLLER_ENABLED = false;
 
 // =============================================================================
 // Big-wins broadcaster (separate use case from sweeps; shares same X account)
