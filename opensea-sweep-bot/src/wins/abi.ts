@@ -1,4 +1,4 @@
-// Shared GameEnded ABI fragment. All 30 game contracts emit this exact
+// Shared GameEnded ABI fragment. All 31 game contracts emit this exact
 // signature, so a single fragment covers every address in TRACKED_GAME_ADDRESSES.
 // Only `user` is indexed.
 export const GAME_ENDED_ABI = [

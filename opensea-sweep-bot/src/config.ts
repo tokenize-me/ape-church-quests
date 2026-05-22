@@ -151,6 +151,7 @@ export const GAME_SLUGS: Record<string, string> = {
   '0x25c170c9c0480b1c8e9e13667fddb87685e50f11': 'ape-church-downs',
   '0x4c4bf42d114c9ab912603d5156f030196975d1cd': 'rillaxe',
   '0x4fe5712e07e64b93dddf6a114d15a9c68f1d6ceb': 'pop-n-drop',
+  '0x6469d499553791811dbec014ab039c02598c5be0': 'skate-or-crash',
 };
 
 // Map of game contract address (lowercased) → human-readable display name.
@@ -187,6 +188,7 @@ export const GAME_NAMES: Record<string, string> = {
   '0x25c170c9c0480b1c8e9e13667fddb87685e50f11': 'ApeChurch Downs',
   '0x4c4bf42d114c9ab912603d5156f030196975d1cd': 'RillAxe',
   '0x4fe5712e07e64b93dddf6a114d15a9c68f1d6ceb': 'Pop N Drop Plinko',
+  '0x6469d499553791811dbec014ab039c02598c5be0': 'Skate or Crash',
 };
 
 // Win tweet template. Placeholders: {playerDisplay}, {payout}, {currency}, {gameName}, {buyIn}, {multiplier}
