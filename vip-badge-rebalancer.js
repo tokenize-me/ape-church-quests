@@ -9,7 +9,7 @@ const {
 
 const VIP_BADGE_CONTRACT = "0x07Ca4fdc27151F040e15c2e6E89fa09898eb287f";
 
-const SUBGRAPH_URL = "https://api.goldsky.com/api/public/project_cmg2x3lrvy37d01vq4bsnbtig/subgraphs/ape-church-newgp-subgraph/1.0.0/gn";
+const SUBGRAPH_URL = "https://api.goldsky.com/api/public/project_cmg2x3lrvy37d01vq4bsnbtig/subgraphs/ape-church-newgp-subgraph/1.0.3/gn";
 
 const VIP_BADGE_ABI = [
     "function getVIPBadgeOwners() external view returns (address[] memory)",

@@ -102,9 +102,9 @@ export const WINS_HEARTBEAT_EVERY_POLLS = 10; // ≈ one heartbeat line per 10 m
 // (e.g. bet 14,500 APE, won 15,000 APE → only 1.03x → doesn't qualify).
 // Path B's payout guard excludes "tiny bet hit a fluke multi" wins.
 // All amounts in native units (APE).
-export const WINS_MIN_PAYOUT_NATIVE = 10_000;       // path A: 10,000 APE gross payout
-export const WINS_MIN_PAYOUT_MULTIPLIER = 1.9;     // path A: must be at least a 1.9x win
-export const WINS_MIN_MULTIPLIER = 10;              // path B: 10x payout/buyIn
+export const WINS_MIN_PAYOUT_NATIVE = 20_000;       // path A: 20,000 APE gross payout
+export const WINS_MIN_PAYOUT_MULTIPLIER = 1.9;      // path A: must be at least a 1.9x win
+export const WINS_MIN_MULTIPLIER = 20;              // path B: 20x payout/buyIn
 export const WINS_MIN_MULTIPLIER_PAYOUT = 1_000;    // path B: payout must be at least 1,000 APE
 
 // Currency of all wins on the platform. Currently APE; widen if/when other chains added.
@@ -152,6 +152,7 @@ export const GAME_SLUGS: Record<string, string> = {
   '0x4c4bf42d114c9ab912603d5156f030196975d1cd': 'rillaxe',
   '0x4fe5712e07e64b93dddf6a114d15a9c68f1d6ceb': 'pop-n-drop',
   '0x6469d499553791811dbec014ab039c02598c5be0': 'skate-or-crash',
+  '0xd199145dd8aae76a9978434ee605f72b6e2a8dea': 'ez-baccarat',
 };
 
 // Map of game contract address (lowercased) → human-readable display name.
@@ -189,6 +190,7 @@ export const GAME_NAMES: Record<string, string> = {
   '0x4c4bf42d114c9ab912603d5156f030196975d1cd': 'RillAxe',
   '0x4fe5712e07e64b93dddf6a114d15a9c68f1d6ceb': 'Pop N Drop Plinko',
   '0x6469d499553791811dbec014ab039c02598c5be0': 'Skate or Crash',
+  '0xd199145dd8aae76a9978434ee605f72b6e2a8dea': 'EZ Baccarat',
 };
 
 // Win tweet template. Placeholders: {playerDisplay}, {payout}, {currency}, {gameName}, {buyIn}, {multiplier}
