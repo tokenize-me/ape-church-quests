@@ -1,41 +1,23 @@
 // index.js
 require('dotenv').config();
-const { createPublicClient, webSocket, http, formatUnits } = require('viem'); // Added http if needed, but using webSocket for transport
+const { createPublicClient, webSocket, formatUnits } = require('viem');
 const { apechain } = require('viem/chains');
 const { createClient } = require('@supabase/supabase-js');
 
 // --- CONFIGURATION ---
 const { APECHAIN_WSS_URL, SUPABASE_URL, SUPABASE_SERVICE_KEY } = process.env;
 
-const HOUSE_ADDRESS = "0x2054709F89F18a4CCAC6132acE7b812E32608469"
+const HOUSE_ADDRESS = "0xB7EcD1F3fA462d2c6c65F55357E8c16c614CC2f1"
 
 // --- ABI DEFINITIONS ---
 const houseAbi = [
   {
     type: 'event',
-    name: 'HouseWon',
+    name: 'PriceChange',
     anonymous: false,
     inputs: [
-      { name: 'GAME_ID', type: 'uint256', indexed: false },
-      { name: 'profit', type: 'uint256', indexed: false },
+      { name: 'newPrice', type: 'uint256', indexed: false },
     ],
-  },
-  {
-    type: 'event',
-    name: 'HouseLost',
-    anonymous: false,
-    inputs: [
-      { name: 'GAME_ID', type: 'uint256', indexed: false },
-      { name: 'user', type: 'address', indexed: false },
-      { name: 'loss', type: 'uint256', indexed: false },
-    ],
-  },
-  {
-    type: 'function',
-    name: 'calculatePrice',
-    inputs: [],
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'view',
   },
 ];
 
@@ -48,20 +30,13 @@ const publicClient = createPublicClient({
 
 console.log('✅ Services Initialized. Starting listeners...');
 
-// --- SHARED HANDLER FOR EVENTS ---
-const handleEvent = async (log) => {
+// --- EVENT HANDLER ---
+const handlePriceChange = async (log) => {
   try {
-    console.log(`[Event Trigger] Detected event at tx: ${log.transactionHash}`);
+    console.log(`[PriceChange] Detected event at tx: ${log.transactionHash}`);
 
-    // Read the current price from the contract
-    const priceBigInt = await publicClient.readContract({
-      address: HOUSE_ADDRESS,
-      abi: houseAbi,
-      functionName: 'calculatePrice',
-    });
-
-    // Parse uint256 to number (use Number for simplicity; if value is large, consider BigInt.toString() and store as text/numeric string)
-    const price = parseFloat(formatUnits(priceBigInt, 18));
+    // Price comes directly from the event - no contract read needed
+    const price = parseFloat(formatUnits(log.args.newPrice, 18));
 
     const record = {
       price: price,
@@ -84,30 +59,17 @@ const handleEvent = async (log) => {
   }
 };
 
-// --- LISTENER: HouseWon and HouseLost Events ---
+// --- LISTENER: PriceChange Event ---
 publicClient.watchContractEvent({
   address: HOUSE_ADDRESS,
   abi: houseAbi,
-  eventName: 'HouseWon',
+  eventName: 'PriceChange',
   onLogs: async (logs) => {
     for (const log of logs) {
-      await handleEvent(log);
+      await handlePriceChange(log);
     }
   },
-  onError: (error) => console.error('[House Won] Listener error:', error.message),
+  onError: (error) => console.error('[PriceChange] Listener error:', error.message),
 });
 
-// --- LISTENER: HouseWon and HouseLost Events ---
-publicClient.watchContractEvent({
-    address: HOUSE_ADDRESS,
-    abi: houseAbi,
-    eventName: 'HouseLost',
-    onLogs: async (logs) => {
-      for (const log of logs) {
-        await handleEvent(log);
-      }
-    },
-    onError: (error) => console.error('[HouseLost Won] Listener error:', error.message),
-  });
-
-console.log(`Listening for "HouseWon" and "HouseLost" events...`);
+console.log(`Listening for "PriceChange" events...`);

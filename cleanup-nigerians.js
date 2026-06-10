@@ -11,7 +11,7 @@ const {
     APECHAIN_RPC_URL,
 } = process.env;
 
-const USER_INFO_CONTRACT_ADDRESS = "0x6EA76F01Aa615112AB7de1409EFBD80a13BfCC84"
+const USER_INFO_CONTRACT_ADDRESS = "0xb90636359a683fcD9Bc2F54623B5C52e48604f08"
 
 // The ABI only needs the balanceOf function for this script
 const USER_INFO_ABI = [
