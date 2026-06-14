@@ -153,6 +153,7 @@ export const GAME_SLUGS: Record<string, string> = {
   '0x4fe5712e07e64b93dddf6a114d15a9c68f1d6ceb': 'pop-n-drop',
   '0x6469d499553791811dbec014ab039c02598c5be0': 'skate-or-crash',
   '0xd199145dd8aae76a9978434ee605f72b6e2a8dea': 'ez-baccarat',
+  '0x6eaeb51ffa0bb99c3ae6502bb678f560930b55ad': 'futbol-frenzy',
 };
 
 // Map of game contract address (lowercased) → human-readable display name.
@@ -191,6 +192,7 @@ export const GAME_NAMES: Record<string, string> = {
   '0x4fe5712e07e64b93dddf6a114d15a9c68f1d6ceb': 'Pop N Drop Plinko',
   '0x6469d499553791811dbec014ab039c02598c5be0': 'Skate or Crash',
   '0xd199145dd8aae76a9978434ee605f72b6e2a8dea': 'EZ Baccarat',
+  '0x6eaeb51ffa0bb99c3ae6502bb678f560930b55ad': 'Futbol Frenzy',
 };
 
 // Win tweet template. Placeholders: {playerDisplay}, {payout}, {currency}, {gameName}, {buyIn}, {multiplier}

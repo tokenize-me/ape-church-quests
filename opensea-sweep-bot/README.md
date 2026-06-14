@@ -111,4 +111,12 @@ Flip flags by editing the shared `.env` and `pm2 restart opensea-sweep-bot`.
 
 ---
 
+### Adding a new game to the wins system
+
+When a new game launches, wire it into the DB listener + big-wins broadcaster by
+adding its contract address to `GAME_NAMES` and `GAME_SLUGS` in `src/config.ts`.
+Full checklist: [`docs/adding-a-game.md`](./docs/adding-a-game.md).
+
+---
+
 For build phases and architecture decisions, see [`../opensea-sweep-bot-plan.md`](../opensea-sweep-bot-plan.md) and [`../opensea-sweep-bot-spec.md`](../opensea-sweep-bot-spec.md).
