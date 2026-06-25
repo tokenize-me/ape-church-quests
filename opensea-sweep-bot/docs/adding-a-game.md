@@ -41,6 +41,26 @@ link. Keep the two maps in sync.
 
 ---
 
+## What you need to collect (and what you don't)
+
+To register a game you need exactly **three** things:
+
+| Field | Example | Used for |
+| --- | --- | --- |
+| **Contract address** | `0x46F36097…CDb8903` | The map **key** (lowercased). Drives the listener subscription + every lookup. |
+| **Display name** | `Poison The King` | `GAME_NAMES` value — the human name in the tweet. Free-form. |
+| **URL slug** | `poison-the-king` | `GAME_SLUGS` value — the `/games/<slug>` path for the replay link. Must match the live web-app route. Lowercase kebab-case only (`^[a-z0-9]+(-[a-z0-9]+)*$`). |
+
+> **You do NOT need the game's numeric ID.** A game is identified throughout this
+> pipeline by its **contract address**, never by a catalog number like "game 37".
+> The `gameId` field that appears in the on-chain `GameEnded` event is the
+> *per-play round number*; the listener stores it per-row in Supabase and reuses
+> it as the `?id=` on the replay link — it is read off-chain automatically and is
+> nothing you configure here. If someone hands you a game ID, you can ignore it
+> for this task.
+
+---
+
 ## Step-by-step
 
 ### 1. Get the game's contract address
@@ -90,6 +110,42 @@ pm2 logs opensea-sweep-bot --lines 50 | grep listener
 After the game sees its first plays, confirm rows are landing in Supabase
 (`game_ended_events`, filtered by `game_address`) and that a qualifying win
 produces a `[wins] published ...` log line.
+
+---
+
+## Worked example — "Poison The King"
+
+Given a new game:
+
+- Address: `0x46F3609778B716A50e669861f566b7793CDb8903`
+- Name: `Poison The King`
+- Slug: `poison-the-king`
+
+Lowercase the address and append one line to **each** map in
+[`src/config.ts`](../src/config.ts):
+
+```ts
+// in GAME_SLUGS
+'0x46f3609778b716a50e669861f566b7793cdb8903': 'poison-the-king',
+
+// in GAME_NAMES
+'0x46f3609778b716a50e669861f566b7793cdb8903': 'Poison The King',
+```
+
+Then build, test, and restart:
+
+```bash
+cd opensea-sweep-bot
+npm run build      # tsc — must exit 0
+npm test           # vitest — the map-hygiene tests fail if a key isn't
+                   #   lowercase or a slug isn't kebab-case
+pm2 restart opensea-sweep-bot
+```
+
+`npm test` is your safety net: `src/wins/wins.test.ts` asserts every
+`GAME_NAMES`/`GAME_SLUGS` key is lowercase and every slug matches
+`^[a-z0-9]+(-[a-z0-9]+)*$`. If you forget to lowercase the address or fat-finger
+the slug, the test goes red before anything ships.
 
 ---
 
