@@ -155,6 +155,7 @@ export const GAME_SLUGS: Record<string, string> = {
   '0xd199145dd8aae76a9978434ee605f72b6e2a8dea': 'ez-baccarat',
   '0x6eaeb51ffa0bb99c3ae6502bb678f560930b55ad': 'futbol-frenzy',
   '0x46f3609778b716a50e669861f566b7793cdb8903': 'poison-the-king',
+  '0x585d87af86a4c39dea3a1e56a434cfcf57f9c39f': 'hoo-hee-how',
 };
 
 // Map of game contract address (lowercased) → human-readable display name.
@@ -195,6 +196,7 @@ export const GAME_NAMES: Record<string, string> = {
   '0xd199145dd8aae76a9978434ee605f72b6e2a8dea': 'EZ Baccarat',
   '0x6eaeb51ffa0bb99c3ae6502bb678f560930b55ad': 'Futbol Frenzy',
   '0x46f3609778b716a50e669861f566b7793cdb8903': 'Poison The King',
+  '0x585d87af86a4c39dea3a1e56a434cfcf57f9c39f': 'Hoo Hee How',
 };
 
 // Win tweet template. Placeholders: {playerDisplay}, {payout}, {currency}, {gameName}, {buyIn}, {multiplier}
