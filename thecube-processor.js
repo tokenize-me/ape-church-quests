@@ -88,8 +88,8 @@ const FULL_RESOLVE_MAX_GAS = GAME_FULL_RESOLVE_MAX_GAS
 /** Serialize outbound txs from this process so rapid chunk sends do not reuse the same pending nonce. */
 let exclusiveSendChain = Promise.resolve();
 
-if (!APECHAIN_RPC_URL || !APECHAIN_WSS_URL || !PRIVATE_KEY) {
-  console.error('Missing required environment variables. Expected APECHAIN_RPC_URL, APECHAIN_WSS_URL, and PRIVATE_KEY.');
+if (!APECHAIN_RPC_URL || !APECHAIN_WSS_URL || !CUBE_PRIVATE_KEY) {
+  console.error('Missing required environment variables. Expected APECHAIN_RPC_URL, APECHAIN_WSS_URL, and CUBE_PRIVATE_KEY.');
   process.exit(1);
 }
 
@@ -99,7 +99,7 @@ const publicClient = createPublicClient({
 });
 
 const provider = new ethers.JsonRpcProvider(APECHAIN_RPC_URL);
-const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+const wallet = new ethers.Wallet(CUBE_PRIVATE_KEY, provider);
 const contract = new ethers.Contract(GAME_CONTRACT_ADDRESS, GAME_PROCESSOR_ABI, wallet);
 
 const knownGames = new Map();
