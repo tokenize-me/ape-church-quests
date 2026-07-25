@@ -8,6 +8,7 @@ import {
   DRY_RUN,
   WINS_HEARTBEAT_EVERY_POLLS,
   WINS_POLL_INTERVAL_MS,
+  isWinTweetExcluded,
 } from '../config';
 import type { WinEvent } from './types';
 
@@ -69,6 +70,7 @@ export class WinsBroadcaster {
       this.heartbeatStats.polled += wins.length;
       const bigUnposted = wins.filter(
         (w) =>
+          !isWinTweetExcluded(w.gameAddress) &&
           w.blockTimestamp >= this.floorTimestamp &&
           isBigWin(w) &&
           !isWinPublished(w.eventId),
@@ -97,6 +99,7 @@ export class WinsBroadcaster {
   // dedup + bigWin gating as the poller, then publishes if it qualifies.
   // Idempotent — safe to call with the same event repeatedly.
   async handleEvent(win: WinEvent): Promise<void> {
+    if (isWinTweetExcluded(win.gameAddress)) return;
     if (win.blockTimestamp < this.floorTimestamp) return;
     if (!isBigWin(win)) return;
     if (isWinPublished(win.eventId)) return;

@@ -10,6 +10,7 @@ import {
   WINS_DECIMALS,
   WINS_LAST_SEEN_BLOCK_KEY,
   TRACKED_GAME_ADDRESSES,
+  isWinTweetExcluded,
 } from '../config';
 import { getCursor, setCursor } from '../storage/queries';
 import { GAME_ENDED_ABI } from './abi';
@@ -184,6 +185,8 @@ export class WinsListener {
         `[listener] upserted ${row.event_id} game=${row.game_address} payout_wei=${row.payout_wei}`,
       );
     }
+
+    if (isWinTweetExcluded(decoded.gameAddress)) return;
 
     // 2. Tweet path: build a WinEvent and hand it to the broadcaster, which
     //    enforces the floor + bigWin + dedup gates and publishes if it qualifies.

@@ -206,6 +206,24 @@ describe('GAME_SLUGS map hygiene', () => {
   });
 });
 
+describe('WINS_TWEET_EXCLUDED_ADDRESSES', () => {
+  it('every address is fully lowercase', async () => {
+    const { WINS_TWEET_EXCLUDED_ADDRESSES } = await import('../config');
+    for (const key of WINS_TWEET_EXCLUDED_ADDRESSES) {
+      expect(key, `WINS_TWEET_EXCLUDED_ADDRESSES entry "${key}" must be lowercase`).toBe(
+        key.toLowerCase(),
+      );
+    }
+  });
+
+  it('excludes Social Blackjack from win tweets', async () => {
+    const { isWinTweetExcluded } = await import('../config');
+    expect(isWinTweetExcluded('0xffeaf06df29c0c90cb1d861a23fbb9449f2a6f21')).toBe(true);
+    expect(isWinTweetExcluded('0xFFeAF06dF29c0C90Cb1d861A23FBb9449F2A6f21')).toBe(true);
+    expect(isWinTweetExcluded('0x1f48a104c1808eb4107f3999999d36aeafec56d5')).toBe(false);
+  });
+});
+
 describe('deriveReplayUrl', () => {
   it('builds a URL for a known game address', () => {
     const url = deriveReplayUrl(

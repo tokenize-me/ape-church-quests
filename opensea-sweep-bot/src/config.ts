@@ -159,6 +159,20 @@ export const GAME_SLUGS: Record<string, string> = {
   '0x914d11f805586df8ed440fe23dcdce929965fbb1': 'dojo-drop',
 };
 
+// Games tracked in GAME_NAMES (listener + Supabase) but excluded from big-win
+// tweets — e.g. multiplayer titles with no meaningful replay link.
+export const WINS_TWEET_EXCLUDED_ADDRESSES: readonly `0x${string}`[] = [
+  '0xffeaf06df29c0c90cb1d861a23fbb9449f2a6f21', // Social Blackjack
+];
+
+const WINS_TWEET_EXCLUDED_SET = new Set(
+  WINS_TWEET_EXCLUDED_ADDRESSES.map((a) => a.toLowerCase()),
+);
+
+export function isWinTweetExcluded(gameAddress: string): boolean {
+  return WINS_TWEET_EXCLUDED_SET.has(gameAddress.toLowerCase());
+}
+
 // Map of game contract address (lowercased) → human-readable display name.
 // Keys MUST be lowercase — formatter.ts looks up via address.toLowerCase().
 // Addresses not in this map fall back to "a game (0xabc…123)".
@@ -199,6 +213,7 @@ export const GAME_NAMES: Record<string, string> = {
   '0x46f3609778b716a50e669861f566b7793cdb8903': 'Poison The King',
   '0x585d87af86a4c39dea3a1e56a434cfcf57f9c39f': 'Hoo Hee How',
   '0x914d11f805586df8ed440fe23dcdce929965fbb1': 'Dojo Drop',
+  '0xffeaf06df29c0c90cb1d861a23fbb9449f2a6f21': 'Social Blackjack',
 };
 
 // Win tweet template. Placeholders: {playerDisplay}, {payout}, {currency}, {gameName}, {buyIn}, {multiplier}
