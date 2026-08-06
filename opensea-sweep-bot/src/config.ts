@@ -140,7 +140,8 @@ export const GAME_SLUGS: Record<string, string> = {
   '0x88683b2f9e765e5b1ec2745178354c70a03531ce': 'jungle-plinko',
   '0x6a48a513a46955d8622c809fce876d2f11142003': 'bear-dice',
   '0x5b44ce34300d1b8d32b5a6119f192e3eda74e144': 'speed-crash',
-  '0xa59cf828222ecd8ace4b6195764d11f5ea7f62a6': 'blocks',
+  // '0xa59cf828222ecd8ace4b6195764d11f5ea7f62a6': 'blocks',
+  '0x74d430c8e705ebb8ef0ba05bfde54e901410a288': 'blocks',
   '0xc1acd12aa34dc33979871ef95c540d46a6566b4b': 'primes',
   '0xc1046a6b4c01512803772b25f72d9f6ff27f94a7': 'ricos-revenge',
   '0x5e405198b349d6522bbb614e7391bdc4f4f6f681': 'reel-pirates',
@@ -196,7 +197,7 @@ export const GAME_NAMES: Record<string, string> = {
   '0x88683b2f9e765e5b1ec2745178354c70a03531ce': 'Jungle Plinko',
   '0x6a48a513a46955d8622c809fce876d2f11142003': 'BearADice',
   '0x5b44ce34300d1b8d32b5a6119f192e3eda74e144': 'Speed Crash',
-  '0xa59cf828222ecd8ace4b6195764d11f5ea7f62a6': 'Blocks',
+  '0xa59cf828222ecd8ace4b6195764d11f5ea7f62a6': 'Blocks V1',
   '0xc1acd12aa34dc33979871ef95c540d46a6566b4b': 'Primes',
   '0xc1046a6b4c01512803772b25f72d9f6ff27f94a7': 'Ricos Revenge',
   '0x5e405198b349d6522bbb614e7391bdc4f4f6f681': 'Reel Pirates',
@@ -214,6 +215,7 @@ export const GAME_NAMES: Record<string, string> = {
   '0x585d87af86a4c39dea3a1e56a434cfcf57f9c39f': 'Hoo Hee How',
   '0x914d11f805586df8ed440fe23dcdce929965fbb1': 'Dojo Drop',
   '0xffeaf06df29c0c90cb1d861a23fbb9449f2a6f21': 'Social Blackjack',
+  '0x74d430c8e705ebb8ef0ba05bfde54e901410a288': 'Blocks'
 };
 
 // Win tweet template. Placeholders: {playerDisplay}, {payout}, {currency}, {gameName}, {buyIn}, {multiplier}
