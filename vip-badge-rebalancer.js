@@ -9,7 +9,13 @@ const {
 
 const VIP_BADGE_CONTRACT = "0x07Ca4fdc27151F040e15c2e6E89fa09898eb287f";
 
-const SUBGRAPH_URL = "https://api.goldsky.com/api/public/project_cmg2x3lrvy37d01vq4bsnbtig/subgraphs/ape-church-newgp-subgraph/1.0.3/gn";
+// Merged subgraph (1.0.15) — replaced ape-church-newgp-subgraph/1.0.3.
+// NOTE: the leaderboard field moved. On the old newgp subgraph `totalEXP` was
+// the NEW GP token; on 1.0.15 that name means the OLD EXPManager token and the
+// new one is `totalGPMinted`. Swapping this URL without also changing the query
+// below silently reranks the leaderboard off legacy data — verified to move 3
+// of the 10 badges to the wrong wallets. Keep the two in sync.
+const SUBGRAPH_URL = "https://api.goldsky.com/api/public/project_cmg2x3lrvy37d01vq4bsnbtig/subgraphs/ape-church/1.0.15/gn";
 
 const VIP_BADGE_ABI = [
     "function getVIPBadgeOwners() external view returns (address[] memory)",
@@ -19,9 +25,9 @@ const VIP_BADGE_ABI = [
 
 const LEADERBOARD_QUERY = `
     query GetExpLeaderboard($first: Int, $skip: Int) {
-        users(orderBy: totalEXP, orderDirection: desc, first: $first, skip: $skip) {
+        users(orderBy: totalGPMinted, orderDirection: desc, first: $first, skip: $skip) {
             id
-            totalEXP
+            totalGPMinted
         }
     }
 `;
