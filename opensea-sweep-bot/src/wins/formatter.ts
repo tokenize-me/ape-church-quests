@@ -39,6 +39,18 @@ export function deriveReplayUrl(event: WinEvent): string | null {
   return `${APE_CHURCH_BASE_URL}/games/${slug}?id=${event.replayId}`;
 }
 
+// Dynamic PnL card image URL for the event — the same image X unfurls via
+// og:image when it crawls the replay URL. Fetching it once before tweeting
+// makes the web app render + persist the card, so the crawler gets a fast
+// redirect to a stored PNG instead of a cold render. Same guards (and same
+// null policy) as deriveReplayUrl.
+export function derivePnlImageUrl(event: WinEvent): string | null {
+  const slug = GAME_SLUGS[event.gameAddress.toLowerCase()];
+  if (!slug) return null;
+  if (!/^\d+$/.test(event.replayId)) return null;
+  return `${APE_CHURCH_BASE_URL}/api/pnl-image/${slug}/${event.replayId}`;
+}
+
 export function derivePlayerDisplay(event: WinEvent): string {
   if (event.xHandle && event.xHandle.trim().length > 0) {
     return `@${event.xHandle.trim().replace(/^@/, '')}`;

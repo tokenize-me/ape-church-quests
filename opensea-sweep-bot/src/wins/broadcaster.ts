@@ -2,11 +2,12 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { TwitterPublisher } from '../publisher/twitter';
 import { fetchRecentWins } from './source';
 import { isBigWin } from './selector';
-import { buildWinTweet } from './formatter';
+import { buildWinTweet, derivePnlImageUrl } from './formatter';
 import { isWinPublished, recordPublishedWin } from '../storage/queries';
 import {
   DRY_RUN,
   WINS_HEARTBEAT_EVERY_POLLS,
+  WINS_PNL_WARMUP_TIMEOUT_MS,
   WINS_POLL_INTERVAL_MS,
   isWinTweetExcluded,
 } from '../config';
@@ -117,11 +118,31 @@ export class WinsBroadcaster {
     this.heartbeatStats = makePollStats();
   }
 
+  // Warm the PnL card the replay URL unfurls with, so X's crawler (which
+  // fetches og:image within seconds of the tweet) hits an already-persisted
+  // PNG instead of a cold render. Best-effort — never blocks the tweet.
+  private async warmPnlCard(win: WinEvent): Promise<void> {
+    const url = derivePnlImageUrl(win);
+    if (!url) return;
+    try {
+      const res = await fetch(url, {
+        signal: AbortSignal.timeout(WINS_PNL_WARMUP_TIMEOUT_MS),
+      });
+      console.log(
+        `[wins] pnl card warmup ${res.ok ? 'ok' : `status=${res.status}`} url=${url}`,
+      );
+    } catch (err) {
+      console.warn(`[wins] pnl card warmup failed (tweet proceeds) url=${url}`, err);
+    }
+  }
+
   private async publishWin(win: WinEvent): Promise<void> {
     const { text } = buildWinTweet(win);
     console.log(
       `[wins] publishing win event=${win.eventId} user=${win.userAddress} payout=${win.payoutNative} buyIn=${win.buyInNative}`,
     );
+
+    await this.warmPnlCard(win);
 
     try {
       const result = await this.opts.publisher.publishSweep(text, []);

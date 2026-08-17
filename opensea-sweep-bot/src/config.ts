@@ -89,6 +89,11 @@ export const WINS_POLL_INTERVAL_MS = 60_000;
 export const WINS_POLL_BATCH_SIZE = 200;
 export const WINS_HEARTBEAT_EVERY_POLLS = 10; // ≈ one heartbeat line per 10 minutes
 
+// Pre-tweet warmup of the dynamic PnL card (`/api/pnl-image/<slug>/<id>`).
+// Generous because a cold Vercel function + first-render asset fetches can take
+// several seconds; the warmup is best-effort and never blocks the tweet.
+export const WINS_PNL_WARMUP_TIMEOUT_MS = 20_000;
+
 // A win is "big" if EITHER path qualifies (OR — whichever fires first):
 //
 //   Path A (absolute):    payout >= WINS_MIN_PAYOUT_NATIVE
