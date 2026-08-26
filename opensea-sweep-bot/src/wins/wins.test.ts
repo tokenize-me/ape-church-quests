@@ -168,6 +168,11 @@ describe('deriveGameName', () => {
     );
   });
 
+  it('distinguishes HiLo V1 from HiLo V2', () => {
+    expect(deriveGameName('0xa67d5cd51028caaa367eefce90a5ea0b71c6cbe2')).toBe('HiLo V1');
+    expect(deriveGameName('0x60A753fe43832509b4cCAe1da3230a9bedBC736F')).toBe('HiLo');
+  });
+
   it('matches even when caller passes a checksummed address', () => {
     expect(deriveGameName('0x9ebb4Df257B971582BAf096b62CA41DE7723F3CB')).toBe(
       'Slots (DinoDough)',
@@ -230,6 +235,25 @@ describe('deriveReplayUrl', () => {
       win({ gameAddress: '0x1f48a104c1808eb4107f3999999d36aeafec56d5', replayId: '183245' }),
     );
     expect(url).toBe('https://www.ape.church/games/roulette?id=183245');
+  });
+
+  it('routes HiLo V1 to /games/hilo-v1 and HiLo V2 to /games/hilo', () => {
+    expect(
+      deriveReplayUrl(
+        win({
+          gameAddress: '0xa67d5cd51028caaa367eefce90a5ea0b71c6cbe2',
+          replayId: '7',
+        }),
+      ),
+    ).toBe('https://www.ape.church/games/hilo-v1?id=7');
+    expect(
+      deriveReplayUrl(
+        win({
+          gameAddress: '0x60A753fe43832509b4cCAe1da3230a9bedBC736F',
+          replayId: '49',
+        }),
+      ),
+    ).toBe('https://www.ape.church/games/hilo?id=49');
   });
 
   it('matches even when the caller passes a checksummed address', () => {
