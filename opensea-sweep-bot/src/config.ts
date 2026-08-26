@@ -165,6 +165,7 @@ export const GAME_SLUGS: Record<string, string> = {
   '0x585d87af86a4c39dea3a1e56a434cfcf57f9c39f': 'hoo-hee-how',
   '0x914d11f805586df8ed440fe23dcdce929965fbb1': 'dojo-drop',
   '0xe72beafdb5138468d6ff43d9a58eebdfc26197a0': 'geecracker',
+  '0xe9cd5837609c548453f73bd4d531fe86c5d1e635': 'legend-of-the-gold-cub',
 };
 
 // Games tracked in GAME_NAMES (listener + Supabase) but excluded from big-win
@@ -225,6 +226,7 @@ export const GAME_NAMES: Record<string, string> = {
   '0xffeaf06df29c0c90cb1d861a23fbb9449f2a6f21': 'Social Blackjack',
   '0x74d430c8e705ebb8ef0ba05bfde54e901410a288': 'Blocks',
   '0xe72beafdb5138468d6ff43d9a58eebdfc26197a0': 'GeeCracker',
+  '0xe9cd5837609c548453f73bd4d531fe86c5d1e635': 'Legend Of The Gold Cub',
 };
 
 // Win tweet template. Placeholders: {playerDisplay}, {payout}, {currency}, {gameName}, {buyIn}, {multiplier}
