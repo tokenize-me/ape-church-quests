@@ -171,6 +171,7 @@ export const GAME_SLUGS: Record<string, string> = {
   '0x914d11f805586df8ed440fe23dcdce929965fbb1': 'dojo-drop',
   '0xe72beafdb5138468d6ff43d9a58eebdfc26197a0': 'geecracker',
   '0xe9cd5837609c548453f73bd4d531fe86c5d1e635': 'legend-of-the-gold-cub',
+  '0xc66785b58579fac4081fd7bc2b872e1a42a9724a': 'miami-vice',
 };
 
 // Games tracked in GAME_NAMES (listener + Supabase) but excluded from big-win
@@ -233,6 +234,7 @@ export const GAME_NAMES: Record<string, string> = {
   '0x74d430c8e705ebb8ef0ba05bfde54e901410a288': 'Blocks',
   '0xe72beafdb5138468d6ff43d9a58eebdfc26197a0': 'GeeCracker',
   '0xe9cd5837609c548453f73bd4d531fe86c5d1e635': 'Legend Of The Gold Cub',
+  '0xc66785b58579fac4081fd7bc2b872e1a42a9724a': 'Miami Vice',
 };
 
 // Win tweet template. Placeholders: {playerDisplay}, {payout}, {currency}, {gameName}, {buyIn}, {multiplier}
