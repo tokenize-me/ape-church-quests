@@ -23,6 +23,14 @@ export const TWEET_TEMPLATES = {
     'ApeChurch Deployer has swept {count} {collectionName} NFTs for a total cost of {total} {currency}, purchasing each NFT at an average price of {average} {currency}.',
 } as const;
 
+// Collection slug → the name to use in tweets, for collections whose tokens
+// carry no usable name of their own (OpenSea reports "#27084" or nothing) and
+// whose OpenSea display name is longer than how people refer to them.
+// Collections not listed here fall back to their OpenSea display name.
+export const COLLECTION_NAME_OVERRIDES: Record<string, string> = {
+  'mutant-ape-yacht-club': 'MAYC',
+};
+
 export const IMAGE_GRID_LAYOUT: Record<number, { cols: number; rows: number }> = {
   5: { cols: 3, rows: 2 },
   6: { cols: 3, rows: 2 },
@@ -137,7 +145,7 @@ export const GAME_SLUGS: Record<string, string> = {
   '0xb08c669dc0419151ba4e4920e80128802db5497b': 'baccarat',
   '0xa67d5cd51028caaa367eefce90a5ea0b71c6cbe2': 'hilo-v1',
   '0x60a753fe43832509b4ccae1da3230a9bedbc736f': 'hilo',
-  '0xfd255AeB6A321944bBD23d5749b4D224D8a91110': 'swamp-racing',
+  '0xfd255aeb6a321944bbd23d5749b4d224d8a91110': 'swamp-racing',
   '0x1f48a104c1808eb4107f3999999d36aeafec56d5': 'roulette',
   '0xb02b13adb8eaafe1f41ec942612c4a4862b74d1d': 'geez-diggerz',
   '0xaf107530b56f86ecd59f03a93fb5044f32e02ae9': 'cult-quest',
@@ -199,7 +207,7 @@ export const GAME_NAMES: Record<string, string> = {
   '0xb08c669dc0419151ba4e4920e80128802db5497b': 'Baccarat',
   '0xa67d5cd51028caaa367eefce90a5ea0b71c6cbe2': 'HiLo V1',
   '0x60a753fe43832509b4ccae1da3230a9bedbc736f': 'HiLo',
-  '0xfd255AeB6A321944bBD23d5749b4D224D8a91110': 'Swamp Racing',
+  '0xfd255aeb6a321944bbd23d5749b4d224d8a91110': 'Swamp Racing',
   '0x1f48a104c1808eb4107f3999999d36aeafec56d5': 'Roulette',
   '0xb02b13adb8eaafe1f41ec942612c4a4862b74d1d': 'Slots (GeezDiggers)',
   '0xaf107530b56f86ecd59f03a93fb5044f32e02ae9': 'Cult Quest',

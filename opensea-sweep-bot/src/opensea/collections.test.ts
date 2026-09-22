@@ -57,6 +57,15 @@ describe('getCollectionMetadata', () => {
     expect(md.twitterUsername).toBe('dengsnft');
   });
 
+  it('returns the collection display name, or null when missing', async () => {
+    const fakeFetch = vi.fn(async () => jsonResponse({ name: 'Mutant Ape Yacht Club' }));
+    globalThis.fetch = fakeFetch as unknown as typeof fetch;
+    expect((await getCollectionMetadata('mayc', KEY)).name).toBe('Mutant Ape Yacht Club');
+
+    globalThis.fetch = vi.fn(async () => jsonResponse({ name: '  ' })) as unknown as typeof fetch;
+    expect((await getCollectionMetadata('blank', KEY)).name).toBeNull();
+  });
+
   it('caches 404s as null (collection does not exist)', async () => {
     const fakeFetch = vi.fn(async () => new Response('not found', { status: 404 }));
     globalThis.fetch = fakeFetch as unknown as typeof fetch;

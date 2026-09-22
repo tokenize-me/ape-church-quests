@@ -6,22 +6,16 @@ loadDotenv({ path: REPO_ROOT_ENV });
 
 import {
   DRY_RUN,
-  IMAGE_DOWNLOAD_TIMEOUT_MS,
   QUIET_PERIOD_MS,
-  TWITTER_NATIVE_GRID_MAX,
   WINS_LISTENER_ENABLED,
   WINS_POLLER_ENABLED,
 } from './config';
 import { StreamClient } from './stream/client';
 import { StreamManager } from './stream/manager';
 import { SweepBuffer } from './aggregator/buffer';
-import { buildTweet } from './formatter/tweet';
-import { selectImagesToShow } from './images/selector';
-import { downloadImages } from './images/downloader';
-import { buildCollage } from './images/collage';
 import { TwitterPublisher, makeRealTwitterClient } from './publisher/twitter';
 import { isSweepPublished, recordPublishedSweep } from './storage/queries';
-import { getCollectionMetadata } from './opensea/collections';
+import { buildSweepMedia, buildSweepText } from './sweeps/compose';
 import { WinsBroadcaster } from './wins/broadcaster';
 import { WinsListener } from './wins/listener';
 import { makeSupabaseClient } from './wins/source';
@@ -54,30 +48,8 @@ async function processSweep(
       `chain=${sweep.chain} tx=${sweep.txHash}`,
   );
 
-  const { twitterUsername } = await getCollectionMetadata(
-    sweep.collectionSlug,
-    openseaApiKey,
-  );
-  if (twitterUsername) {
-    console.log(`[index] collection @${twitterUsername} found for slug=${sweep.collectionSlug}`);
-  }
-
-  const text = buildTweet(sweep, twitterUsername).text;
-  const urls = selectImagesToShow(sweep);
-  const downloaded = await downloadImages(urls, IMAGE_DOWNLOAD_TIMEOUT_MS);
-
-  let mediaBuffers: Buffer[];
-  if (downloaded.length > TWITTER_NATIVE_GRID_MAX) {
-    try {
-      mediaBuffers = [await buildCollage(downloaded)];
-      console.log(`[index] built collage from ${downloaded.length} images`);
-    } catch (err) {
-      console.error('[index] collage build failed, posting text-only', err);
-      mediaBuffers = [];
-    }
-  } else {
-    mediaBuffers = downloaded;
-  }
+  const text = await buildSweepText(sweep, openseaApiKey);
+  const mediaBuffers = await buildSweepMedia(sweep);
 
   try {
     const result = await publisher.publishSweep(text, mediaBuffers);

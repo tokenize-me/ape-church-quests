@@ -1,5 +1,6 @@
 export interface CollectionMetadata {
   twitterUsername: string | null;
+  name: string | null;
 }
 
 const COLLECTION_LOOKUP_TIMEOUT_MS = 5_000;
@@ -20,9 +21,13 @@ export async function getCollectionMetadata(
     });
 
     if (response.ok) {
-      const data = (await response.json()) as { twitter_username?: string | null };
+      const data = (await response.json()) as {
+        twitter_username?: string | null;
+        name?: string | null;
+      };
       const result: CollectionMetadata = {
         twitterUsername: normalizeHandle(data.twitter_username),
+        name: data.name?.trim() || null,
       };
       cache.set(slug, result);
       return result;
@@ -30,7 +35,7 @@ export async function getCollectionMetadata(
 
     if (response.status === 404) {
       // Collection doesn't exist on OpenSea's REST side; cache the negative
-      const negative: CollectionMetadata = { twitterUsername: null };
+      const negative: CollectionMetadata = { twitterUsername: null, name: null };
       cache.set(slug, negative);
       return negative;
     }
@@ -39,11 +44,11 @@ export async function getCollectionMetadata(
     console.warn(
       `[opensea] collection lookup HTTP ${response.status} for slug=${slug}`,
     );
-    return { twitterUsername: null };
+    return { twitterUsername: null, name: null };
   } catch (err) {
     const reason = err instanceof Error ? err.message : String(err);
     console.warn(`[opensea] collection lookup error for ${slug}: ${reason}`);
-    return { twitterUsername: null };
+    return { twitterUsername: null, name: null };
   }
 }
 
