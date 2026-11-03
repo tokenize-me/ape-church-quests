@@ -182,6 +182,7 @@ export const GAME_SLUGS: Record<string, string> = {
   '0xc66785b58579fac4081fd7bc2b872e1a42a9724a': 'miami-vice',
   '0x3d38fc488ae2a633f53239b436801d19d3a34e47': 'the-cube',
   '0xd768ca5c35a7c22c4e21bc0dbaebe16ec9f088dc': 'overtime-zombie',
+  '0x90021afde6e39fed4a442e2719829ce9dfdfe6e5': 'gimboz-dash',
 };
 
 // Games tracked in GAME_NAMES (listener + Supabase) but excluded from big-win
@@ -247,6 +248,7 @@ export const GAME_NAMES: Record<string, string> = {
   '0xc66785b58579fac4081fd7bc2b872e1a42a9724a': 'Miami Vice',
   '0x3d38fc488ae2a633f53239b436801d19d3a34e47': 'The Cube',
   '0xd768ca5c35a7c22c4e21bc0dbaebe16ec9f088dc': 'Overtime Zombie',
+  '0x90021afde6e39fed4a442e2719829ce9dfdfe6e5': 'Gimboz Dash',
 };
 
 // Win tweet template. Placeholders: {playerDisplay}, {payout}, {currency}, {gameName}, {buyIn}, {multiplier}
