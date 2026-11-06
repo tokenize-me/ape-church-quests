@@ -184,6 +184,7 @@ export const GAME_SLUGS: Record<string, string> = {
   '0xd768ca5c35a7c22c4e21bc0dbaebe16ec9f088dc': 'overtime-zombie',
   '0x90021afde6e39fed4a442e2719829ce9dfdfe6e5': 'gimboz-dash',
   '0x47be809fa2e4a903c1103456c5b1a00fa8057018': 'glitch-flight',
+  '0x09e9ff71fd5924bf9f05b8394384c2b85f174fb4': 'frenchies-afterparty',
 };
 
 // Games tracked in GAME_NAMES (listener + Supabase) but excluded from big-win
@@ -251,6 +252,7 @@ export const GAME_NAMES: Record<string, string> = {
   '0xd768ca5c35a7c22c4e21bc0dbaebe16ec9f088dc': 'Overtime Zombie',
   '0x90021afde6e39fed4a442e2719829ce9dfdfe6e5': 'Gimboz Dash',
   '0x47be809fa2e4a903c1103456c5b1a00fa8057018': 'Glitch Flight',
+  '0x09e9ff71fd5924bf9f05b8394384c2b85f174fb4': 'Frenchies: Ticket to the Afterparty',
 };
 
 // Win tweet template. Placeholders: {playerDisplay}, {payout}, {currency}, {gameName}, {buyIn}, {multiplier}
