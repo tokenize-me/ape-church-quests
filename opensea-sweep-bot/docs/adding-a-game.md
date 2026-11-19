@@ -83,7 +83,11 @@ the repo root (e.g. `futbol-game-processor.js` → `GAME_CONTRACT_ADDRESS`).
 ```
 
 - The **slug** must match the actual web-app route at
-  `https://www.ape.church/games/<slug>` or the replay link will 404.
+  `https://www.ape.church/games/<slug>` or the replay link will 404. A game
+  that belongs to a game family (several games under one landing page, e.g.
+  HV-MTL Scrapyard) has a nested route: use `<family>/<game>`
+  (`hv-mtl-scrapyard/crusher`); the PnL image slug is derived for you
+  (`hv-mtl-scrapyard-crusher`, see `pnlSlugForRoute`).
 - The **display name** is free-form (e.g. `Blackjack`, `Slots (DinoDough)`).
 
 ### 3. Rebuild and restart
@@ -92,9 +96,17 @@ the repo root (e.g. `futbol-game-processor.js` → `GAME_CONTRACT_ADDRESS`).
 cd ~/ape-church-quests
 git pull
 cd opensea-sweep-bot
-npm run build
+npm run build        # low-memory transpile (scripts/build-lowmem.cjs), ~1 s, ~90 MB
 pm2 restart opensea-sweep-bot
 ```
+
+`npm run build` used to be plain `tsc`, which needs ~600 MB and was OOM-killed
+on the droplet (the shell just prints `Killed`). When that happened `dist/` was
+NOT rebuilt and pm2 kept running the old code, which is why new games
+sometimes tweeted without their names. The build now transpiles file by file
+(same output as `tsc`, checked byte-identical); type checking is a separate
+`npm run typecheck`, run locally before pushing. If you ever see `Killed`
+again, `dist/` is stale: do not restart until a build completes.
 
 ### 4. Verify
 
@@ -136,7 +148,8 @@ Then build, test, and restart:
 
 ```bash
 cd opensea-sweep-bot
-npm run build      # tsc — must exit 0
+npm run typecheck  # tsc --noEmit, locally (needs ~600 MB) — must exit 0
+npm run build      # low-memory transpile — must exit 0
 npm test           # vitest — the map-hygiene tests fail if a key isn't
                    #   lowercase or a slug isn't kebab-case
 pm2 restart opensea-sweep-bot

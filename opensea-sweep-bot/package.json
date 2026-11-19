@@ -5,7 +5,9 @@
   "description": "Watches a deployer wallet for OpenSea sweeps on Ethereum and ApeChain and posts announcements to X.",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "node scripts/build-lowmem.cjs",
+    "build:tsc": "tsc",
+    "typecheck": "tsc --noEmit",
     "start": "node dist/index.js",
     "backfill": "node dist/backfill.js",
     "dev": "tsc -w",
