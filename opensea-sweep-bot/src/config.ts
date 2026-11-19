@@ -133,8 +133,12 @@ export const WINS_DECIMALS = 18; // wei → native conversion
 // (the bot is single-environment, prod-only).
 export const APE_CHURCH_BASE_URL = 'https://www.ape.church';
 
-// Map of game contract address (lowercased) → URL slug for the replay page.
-// Tweet URL shape: `${APE_CHURCH_BASE_URL}/games/<slug>?id=<replayId>`.
+// Map of game contract address (lowercased) → the game's route under /games/.
+// Tweet URL shape: `${APE_CHURCH_BASE_URL}/games/<route>?id=<replayId>`.
+// A game-family member (several games sharing one landing page, e.g. HV-MTL
+// Scrapyard) has a nested route `<family>/<game>`; its PnL image slug is the
+// same route with `/` → `-` (see pnlSlugForRoute in wins/formatter.ts, which
+// mirrors pnlSlugForGamePath in the app's lib/pnl-share.ts).
 // Addresses not in this map post the tweet WITHOUT a replay link (graceful
 // degradation — same policy as GAME_NAMES). Keep keys in sync with GAME_NAMES.
 export const GAME_SLUGS: Record<string, string> = {
@@ -186,6 +190,9 @@ export const GAME_SLUGS: Record<string, string> = {
   '0x47be809fa2e4a903c1103456c5b1a00fa8057018': 'glitch-flight',
   '0x09e9ff71fd5924bf9f05b8394384c2b85f174fb4': 'frenchies-afterparty',
   '0x4bf6170afda740bce241f44d7509196236d27975': 'bad-luck-13',
+  // HV-MTL Scrapyard family: each game has its own route under the family page.
+  '0x4992ad0cbc2b6320d8986b5a5d995125bf4ad95d': 'hv-mtl-scrapyard/forge',
+  '0xea5d612ed6a02bde185cd9dfec49bc8b257c694c': 'hv-mtl-scrapyard/crusher',
 };
 
 // Games tracked in GAME_NAMES (listener + Supabase) but excluded from big-win
@@ -255,6 +262,9 @@ export const GAME_NAMES: Record<string, string> = {
   '0x47be809fa2e4a903c1103456c5b1a00fa8057018': 'Glitch Flight',
   '0x09e9ff71fd5924bf9f05b8394384c2b85f174fb4': 'Frenchies: Ticket to the Afterparty',
   '0x4bf6170afda740bce241f44d7509196236d27975': 'Bad Luck 13',
+  // GameEnded.payout for both counts each AMP capsule at its price (owner accepted 2026-11-19).
+  '0x4992ad0cbc2b6320d8986b5a5d995125bf4ad95d': 'HV-MTL Scrapyard: Scrap Forge',
+  '0xea5d612ed6a02bde185cd9dfec49bc8b257c694c': 'HV-MTL Scrapyard: Scrap Crusher',
 };
 
 // Win tweet template. Placeholders: {playerDisplay}, {payout}, {currency}, {gameName}, {buyIn}, {multiplier}

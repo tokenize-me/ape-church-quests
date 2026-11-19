@@ -45,10 +45,17 @@ export function deriveReplayUrl(event: WinEvent): string | null {
 // redirect to a stored PNG instead of a cold render. Same guards (and same
 // null policy) as deriveReplayUrl.
 export function derivePnlImageUrl(event: WinEvent): string | null {
-  const slug = GAME_SLUGS[event.gameAddress.toLowerCase()];
-  if (!slug) return null;
+  const route = GAME_SLUGS[event.gameAddress.toLowerCase()];
+  if (!route) return null;
   if (!/^\d+$/.test(event.replayId)) return null;
-  return `${APE_CHURCH_BASE_URL}/api/pnl-image/${slug}/${event.replayId}`;
+  return `${APE_CHURCH_BASE_URL}/api/pnl-image/${pnlSlugForRoute(route)}/${event.replayId}`;
+}
+
+// The app's PnL image slug for a game route: the whole route with `/` → `-`
+// (`hv-mtl-scrapyard/crusher` → `hv-mtl-scrapyard-crusher`). Identity for
+// every single-segment route.
+export function pnlSlugForRoute(route: string): string {
+  return route.replaceAll('/', '-');
 }
 
 export function derivePlayerDisplay(event: WinEvent): string {

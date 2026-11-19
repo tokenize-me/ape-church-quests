@@ -201,13 +201,21 @@ describe('GAME_SLUGS map hygiene', () => {
     }
   });
 
-  it('every slug matches the sanitization rules from pnl-share-bot.md (lowercase, [a-z0-9-], no leading/trailing/double dashes)', async () => {
+  it('every route is one segment, or <family>/<game> for a game-family member; the PnL slug sanitizes cleanly', async () => {
     const { GAME_SLUGS } = await import('../config');
-    for (const slug of Object.values(GAME_SLUGS)) {
-      expect(slug, `slug "${slug}" must match ^[a-z0-9]+(-[a-z0-9]+)*$`).toMatch(
-        /^[a-z0-9]+(-[a-z0-9]+)*$/,
-      );
+    const { pnlSlugForRoute } = await import('./formatter');
+    const segment = '[a-z0-9]+(-[a-z0-9]+)*';
+    for (const route of Object.values(GAME_SLUGS)) {
+      expect(route, `route "${route}"`).toMatch(new RegExp(`^${segment}(/${segment})?$`));
+      expect(pnlSlugForRoute(route)).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
     }
+  });
+
+  it('a game-family member links to its nested route and its flat PnL slug', async () => {
+    const { deriveReplayUrl, derivePnlImageUrl } = await import('./formatter');
+    const event = { gameAddress: '0xEa5d612eD6a02bDE185cd9DFEc49bC8b257c694C', replayId: '42' } as Parameters<typeof deriveReplayUrl>[0];
+    expect(deriveReplayUrl(event)).toBe('https://www.ape.church/games/hv-mtl-scrapyard/crusher?id=42');
+    expect(derivePnlImageUrl(event)).toBe('https://www.ape.church/api/pnl-image/hv-mtl-scrapyard-crusher/42');
   });
 });
 
